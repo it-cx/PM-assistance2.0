@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Claude Code runtime
+.claude/jobs/
+.claude/worktrees/
+.claude/plans/
+.claude/scheduled_tasks.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
