@@ -316,7 +316,7 @@ var MONTHLY = {
   ]},
   '长宁商务区': { mileage: 168, duration: 28.4, energy: 4450, water: 1050, takeovers: 18, tasks_done: 28, tasks_total: 45, completion: 62.2, online_rate: 85.7, vehicles: [
     { id: 'VHC-08', model: 'SD15',  mileage: 105, energy: 2790, range: 46, daily_avg: 62 },
-    { id: 'VHC-14', model: 'SD22C', mileage: 63,  energy: 1660, range: 60, daily_avg: 38 }
+    { id: 'VHC-15', model: 'SD22C', mileage: 63,  energy: 1660, range: 60, daily_avg: 38 }
   ]}
 };
 
@@ -382,6 +382,73 @@ COMPANIES.forEach(function(name) {
     })
   };
 });
+
+// 车辆利用率标准（日均里程 km）
+var USAGE_STANDARD = { SD15: 50, SD22C: 55 };
+
+// 电池健康数据
+var BATTERY_HEALTH = {
+  'VHC-01': { factory_range: 62, current_range: 58, cycles: 320, degradation: 6.5, health: 'good' },
+  'VHC-02': { factory_range: 65, current_range: 60, cycles: 280, degradation: 7.7, health: 'good' },
+  'VHC-03': { factory_range: 60, current_range: 55, cycles: 350, degradation: 8.3, health: 'good' },
+  'VHC-04': { factory_range: 62, current_range: 58, cycles: 200, degradation: 6.5, health: 'good' },
+  'VHC-05': { factory_range: 58, current_range: 50, cycles: 420, degradation: 13.8, health: 'warn' },
+  'VHC-06': { factory_range: 68, current_range: 62, cycles: 310, degradation: 8.8, health: 'good' },
+  'VHC-07': { factory_range: 60, current_range: 56, cycles: 180, degradation: 6.7, health: 'good' },
+  'VHC-08': { factory_range: 58, current_range: 46, cycles: 480, degradation: 20.7, health: 'bad' },
+  'VHC-09': { factory_range: 72, current_range: 68, cycles: 290, degradation: 5.6, health: 'good' },
+  'VHC-10': { factory_range: 76, current_range: 72, cycles: 260, degradation: 5.3, health: 'good' },
+  'VHC-11': { factory_range: 68, current_range: 64, cycles: 340, degradation: 5.9, health: 'good' },
+  'VHC-12': { factory_range: 66, current_range: 62, cycles: 310, degradation: 6.1, health: 'good' },
+  'VHC-13': { factory_range: 62, current_range: 58, cycles: 380, degradation: 6.5, health: 'good' },
+  'VHC-14': { factory_range: 64, current_range: 60, cycles: 270, degradation: 6.3, health: 'good' },
+  'VHC-15': { factory_range: 56, current_range: 48, cycles: 450, degradation: 14.3, health: 'warn' }
+};
+
+// 车辆维保数据
+var MAINTENANCE = {
+  'VHC-01': { last_date: '2026-05-15', next_date: '2026-07-15', type: '常规保养', interval_days: 60 },
+  'VHC-02': { last_date: '2026-06-01', next_date: '2026-08-01', type: '常规保养', interval_days: 60 },
+  'VHC-03': { last_date: '2026-05-20', next_date: '2026-07-20', type: '常规保养', interval_days: 60 },
+  'VHC-04': { last_date: '2026-06-10', next_date: '2026-08-10', type: '常规保养', interval_days: 60 },
+  'VHC-05': { last_date: '2026-04-28', next_date: '2026-06-28', type: '常规保养', interval_days: 60 },
+  'VHC-06': { last_date: '2026-05-30', next_date: '2026-07-30', type: '常规保养', interval_days: 60 },
+  'VHC-07': { last_date: '2026-06-15', next_date: '2026-08-15', type: '常规保养', interval_days: 60 },
+  'VHC-08': { last_date: '2026-06-05', next_date: '2026-08-05', type: '常规保养', interval_days: 60 },
+  'VHC-09': { last_date: '2026-05-08', next_date: '2026-07-08', type: '常规保养', interval_days: 60 },
+  'VHC-10': { last_date: '2026-05-25', next_date: '2026-07-25', type: '常规保养', interval_days: 60 },
+  'VHC-11': { last_date: '2026-06-20', next_date: '2026-08-20', type: '常规保养', interval_days: 60 },
+  'VHC-12': { last_date: '2026-04-15', next_date: '2026-06-15', type: '常规保养', interval_days: 60 },
+  'VHC-13': { last_date: '2026-06-08', next_date: '2026-08-08', type: '常规保养', interval_days: 60 },
+  'VHC-14': { last_date: '2026-05-12', next_date: '2026-07-12', type: '常规保养', interval_days: 60 },
+  'VHC-15': { last_date: '2026-06-22', next_date: '2026-08-22', type: '常规保养', interval_days: 60 }
+};
+
+// 车辆月度利用率趋势（近6个月）
+var VEHICLE_USAGE_TREND = {};
+(function() {
+  var ids = ['VHC-01','VHC-02','VHC-03','VHC-04','VHC-05','VHC-06','VHC-07','VHC-08','VHC-09','VHC-10','VHC-11','VHC-12','VHC-13','VHC-14','VHC-15'];
+  ids.forEach(function(id) {
+    var base = id === 'VHC-08' ? 65 : id === 'VHC-05' ? 55 : id === 'VHC-15' ? 52 : 45;
+    var trend = (id === 'VHC-08' || id === 'VHC-15') ? -0.04 : (id === 'VHC-05' ? -0.02 : 0.01);
+    VEHICLE_USAGE_TREND[id] = [0,1,2,3,4,5].map(function(_, i) {
+      return Math.max(20, Math.round(base * (1 + trend * i + (Math.random() - 0.5) * 0.15)));
+    });
+  });
+})();
+
+// 车辆月度能耗趋势（近6个月，用于单车画像）
+var VEHICLE_ENERGY_TREND = {};
+(function() {
+  var ids = ['VHC-01','VHC-02','VHC-03','VHC-04','VHC-05','VHC-06','VHC-07','VHC-08','VHC-09','VHC-10','VHC-11','VHC-12','VHC-13','VHC-14','VHC-15'];
+  ids.forEach(function(id) {
+    var base = id === 'VHC-08' ? 32 : id === 'VHC-05' ? 28 : id === 'VHC-15' ? 30 : 22;
+    var trend = (id === 'VHC-08' || id === 'VHC-15') ? 0.05 : (id === 'VHC-05' ? 0.03 : -0.01);
+    VEHICLE_ENERGY_TREND[id] = [0,1,2,3,4,5].map(function(_, i) {
+      return Math.round(base * (1 + trend * i + (Math.random() - 0.5) * 0.12) * 10) / 10;
+    });
+  });
+})();
 
 /* ============================================================
    工具函数
@@ -586,8 +653,8 @@ function renderOverview() {
 
   // 底部双图
   '<div style="display:flex;gap:14px;">' +
-    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">全集团月度里程趋势（近 6 个月）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_trend\')">?</span></div></div><div class="panel-body"><div id="overviewTrendChart" class="chart-box h240"></div></div></div>' +
-    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">各公司完成率趋势（近 6 个月）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_completion\')">?</span><div class="panel-head-tag">交付质量可比</div></div></div><div class="panel-body"><div id="overviewCompletionChart" class="chart-box h240"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">产出趋势（近 6 个月）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_trend\')">?</span><div class="panel-head-tag">全集团月度总里程变化</div></div></div><div class="panel-body"><div id="overviewTrendChart" class="chart-box h240"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">交付质量走势（近 6 个月）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_completion\')">?</span><div class="panel-head-tag">各公司完成率对比</div></div></div><div class="panel-body"><div id="overviewCompletionChart" class="chart-box h240"></div></div></div>' +
   '</div>';
 }
 
@@ -724,7 +791,7 @@ function renderEfficiency() {
 
   function renderTypeTable(data, typeName, insightKey) {
     var sorted = data.slice().sort(function(a, b) { return a.kwh100 - b.kwh100; });
-    return '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">' + typeName + ' 车型能耗排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'' + insightKey + '\')">?</span><div class="panel-head-tag">基准线 ' + (data[0] ? data[0].baseline : '-') + ' kWh/100km · 越低越优</div></div></div>' +
+    return '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">' + typeName + ' 能耗效率对比</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'' + insightKey + '\')">?</span><div class="panel-head-tag">基准线 ' + (data[0] ? data[0].baseline : '-') + ' kWh/100km · 越低越优</div></div></div>' +
     '<div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>车辆数</th><th>百km能耗</th><th>vs 基准</th><th>评价</th></tr></thead><tbody>' +
     sorted.map(function(r) {
       var delta = (r.kwh100 - r.baseline) / r.baseline * 100;
@@ -737,12 +804,23 @@ function renderEfficiency() {
 
   return renderTypeTable(sd15, 'SD15', 'eff_sd15') + renderTypeTable(sd22c, 'SD22C', 'eff_sd22c') +
   '<div style="display:flex;gap:14px;">' +
-    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">近 30 天百公里能耗趋势</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'eff_trend\')">?</span><div class="panel-head-tag">各公司对比</div></div></div><div class="panel-body"><div id="effTrendChart" class="chart-box h280"></div></div></div>' +
-    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">能耗构成 · 全集团</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'eff_composition\')">?</span></div></div><div class="panel-body"><div id="effPieChart" class="chart-box h280"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">能耗优化跟踪（近 30 天）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'eff_trend\')">?</span><div class="panel-head-tag">各公司百公里能耗变化</div></div></div><div class="panel-body"><div id="effTrendChart" class="chart-box h280"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">能耗结构诊断 · 全集团</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'eff_composition\')">?</span><div class="panel-head-tag">驱动/清扫/辅助/待机占比</div></div></div><div class="panel-body"><div id="effPieChart" class="chart-box h280"></div></div></div>' +
   '</div>';
 }
 
 function mountEfficiency() {
+  // 计算每日集团均值基准线
+  var meanLine = [];
+  for (var j = 0; j < 30; j++) {
+    var sum = 0, cnt = 0;
+    COMPANIES.forEach(function(name) {
+      var d = DAILY[name];
+      if (d.dailyMileage[j] > 0) { sum += d.dailyEnergy[j] / d.dailyMileage[j] * 100; cnt++; }
+    });
+    meanLine.push(cnt > 0 ? Math.round(sum / cnt * 10) / 10 : null);
+  }
+
   initChart('effTrendChart', {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
@@ -754,7 +832,11 @@ function mountEfficiency() {
       return { name: name, type: 'line', smooth: true, symbol: 'none',
         data: DAILY[name].dailyEnergy.map(function(e, j) { return Math.round(e / DAILY[name].dailyMileage[j] * 1000) / 10; }),
         lineStyle: { width: 1.5, color: COMPANY_COLORS[i] } };
-    })
+    }).concat([{
+      name: '集团均值', type: 'line', symbol: 'none',
+      data: meanLine,
+      lineStyle: { width: 2, color: '#94A3B8', type: 'dashed' }
+    }])
   });
 
   initChart('effPieChart', {
@@ -817,7 +899,7 @@ function renderSafety() {
   '</div>' +
 
   '<div style="display:flex;gap:14px;margin-bottom:14px;">' +
-    '<div class="panel" style="flex:1.2"><div class="panel-head"><div class="panel-head-title">项目公司接管排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_ranking\')">?</span><div class="panel-head-tag">按百公里接管率降序</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>接管次数</th><th>百km接管率</th><th>vs 集团均值</th><th>评价</th></tr></thead><tbody>' +
+    '<div class="panel" style="flex:1.2"><div class="panel-head"><div class="panel-head-title">安全风险排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_ranking\')">?</span><div class="panel-head-tag">按百公里接管率降序 · 发现高危公司</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>接管次数</th><th>百km接管率</th><th>vs 集团均值</th><th>评价</th></tr></thead><tbody>' +
     rows.map(function(r) {
       var vsAvg = (r.rate - globalRate) / globalRate * 100;
       var rCls = vsAvg > 50 ? 'cell-bad' : vsAvg > 20 ? 'cell-warn' : vsAvg < -30 ? 'cell-good' : '';
@@ -826,10 +908,10 @@ function renderSafety() {
     }).join('') +
     '</tbody></table></div></div></div>' +
 
-    '<div class="panel" style="flex:0.8"><div class="panel-head"><div class="panel-head-title">全集团接管原因分布</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_causes\')">?</span><div class="panel-head-tag">TOP3 占 ' + top3Pct.toFixed(0) + '%</div></div></div><div class="panel-body"><div id="safetyCauseChart" class="chart-box h280"></div></div></div>' +
+    '<div class="panel" style="flex:0.8"><div class="panel-head"><div class="panel-head-title">接管根因分析</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_causes\')">?</span><div class="panel-head-tag">TOP3 占 ' + top3Pct.toFixed(0) + '% · 定位共性痛点</div></div></div><div class="panel-body"><div id="safetyCauseChart" class="chart-box h280"></div></div></div>' +
   '</div>' +
 
-  '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">各公司接管原因对比</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_stack\')">?</span><div class="panel-head-tag">堆叠柱状图 · 按原因分层</div></div></div><div class="panel-body"><div id="safetyStackChart" class="chart-box h260"></div></div></div>' +
+  '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">各公司风险画像对比</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_stack\')">?</span><div class="panel-head-tag">堆叠柱状图 · 按原因分层，精准施策</div></div></div><div class="panel-body"><div id="safetyStackChart" class="chart-box h260"></div></div></div>' +
 
   '<div><div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="width:3px;height:13px;background:var(--blue);border-radius:2px"></span>系统自动分析结论</div><div class="panel-head-right" style="margin-bottom:10px"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_conclusion\')">?</span></div>' +
     '<div class="conclusion-card crit"><div class="conclusion-card-title">' + worst.name + '：接管率 ' + fmt(worst.rate) + ' 次/百公里，为全集团均值 ' + fmt(globalRate) + ' 的 ' + fmt(worst.rate / globalRate) + ' 倍</div><div class="conclusion-card-text">' + (function() {
@@ -912,7 +994,7 @@ function renderEnergy() {
   '</div>' +
 
   '<div style="display:flex;gap:14px;margin-bottom:14px;">' +
-    '<div class="panel" style="flex:1.3"><div class="panel-head"><div class="panel-head-title">车辆续航匹配表</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_range\')">?</span><div class="panel-head-tag">满电续航 vs 日均里程 · 自动标注风险</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>车辆</th><th>车型</th><th>满电续航</th><th>日均里程</th><th>电量冗余</th></tr></thead><tbody>' +
+    '<div class="panel" style="flex:1.3"><div class="panel-head"><div class="panel-head-title">续航能力匹配检测</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_range\')">?</span><div class="panel-head-tag">满电续航 vs 日均里程 · 自动标注风险</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>车辆</th><th>车型</th><th>满电续航</th><th>日均里程</th><th>电量冗余</th></tr></thead><tbody>' +
     sortedByRange.map(function(v) {
       var red = v.range - v.daily_avg;
       var rCls = red > 20 ? 'cell-good' : red > 10 ? '' : red > 0 ? 'cell-warn' : 'cell-bad';
@@ -920,12 +1002,12 @@ function renderEnergy() {
       return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[v.companyIdx] + ';margin-right:8px"></span>' + v.company + '</td><td>' + v.id + '</td><td>' + v.model + '</td><td>' + fmt(v.range) + ' km</td><td>' + fmt(v.daily_avg) + ' km</td><td class="' + rCls + '">' + st + '</td></tr>';
     }).join('') +
     '</tbody></table></div></div></div>' +
-    '<div class="panel" style="flex:0.7"><div class="panel-head"><div class="panel-head-title">续航 vs 日均里程对比</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_scatter\')">?</span></div></div><div class="panel-body"><div id="energyScatter" class="chart-box h300"></div></div></div>' +
+    '<div class="panel" style="flex:0.7"><div class="panel-head"><div class="panel-head-title">续航适配分析</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_scatter\')">?</span><div class="panel-head-tag">●绿=健康 ●黄=注意 ●红=警告</div></div></div><div class="panel-body"><div id="energyScatter" class="chart-box h300"></div></div></div>' +
   '</div>' +
 
   '<div style="display:flex;gap:14px;">' +
-    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">充电效率对比（30%-80% 快充段）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_efficiency\')">?</span><div class="panel-head-tag">实际 vs 理论充电时长</div></div></div><div class="panel-body"><div id="chargeEfficiencyChart" class="chart-box h240"></div></div></div>' +
-    '<div class="panel" style="flex:0.7"><div class="panel-head"><div class="panel-head-title">充电次数 vs 里程散点分析</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_charge_scatter\')">?</span><div class="panel-head-tag">偏离拟合线 = 充电异常频繁</div></div></div><div class="panel-body"><div id="chargeScatterChart" class="chart-box h240"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">充电效率诊断（30%-80% 快充段）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_efficiency\')">?</span><div class="panel-head-tag">实际 vs 理论充电时长</div></div></div><div class="panel-body"><div id="chargeEfficiencyChart" class="chart-box h240"></div></div></div>' +
+    '<div class="panel" style="flex:0.7"><div class="panel-head"><div class="panel-head-title">充电频次异常检测</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_charge_scatter\')">?</span><div class="panel-head-tag">偏离拟合线 = 充电异常频繁</div></div></div><div class="panel-body"><div id="chargeScatterChart" class="chart-box h240"></div></div></div>' +
   '</div>';
 }
 
@@ -1012,7 +1094,7 @@ function renderValue() {
   '</div>' +
 
   '<div style="display:flex;gap:14px;margin-bottom:14px;">' +
-    '<div class="panel" style="flex:1.2"><div class="panel-head"><div class="panel-head-title">项目公司完成率排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_ranking\')">?</span><div class="panel-head-tag">当月完成率 · 含延期风险标记</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>已完成</th><th>总数</th><th>完成率</th><th>剩余</th><th>预计完成</th><th>风险</th></tr></thead><tbody>' +
+    '<div class="panel" style="flex:1.2"><div class="panel-head"><div class="panel-head-title">交付达成率排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_ranking\')">?</span><div class="panel-head-tag">当月完成率 · 含延期风险预估</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>已完成</th><th>总数</th><th>完成率</th><th>剩余</th><th>预计完成</th><th>风险</th></tr></thead><tbody>' +
     rows.map(function(r) {
       var remaining = r.tasks_total - r.tasks_done;
       var dailyRate = r.tasks_done / 30;
@@ -1022,10 +1104,10 @@ function renderValue() {
       return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[r.idx] + ';margin-right:8px"></span>' + r.name + '</td><td>' + r.tasks_done + '</td><td>' + r.tasks_total + '</td><td class="' + cCls + '">' + fmtPct(r.completion) + '</td><td>' + remaining + '</td><td>约 ' + estDays + ' 天</td><td>' + risk + '</td></tr>';
     }).join('') +
     '</tbody></table></div></div></div>' +
-    '<div class="panel" style="flex:0.8"><div class="panel-head"><div class="panel-head-title">月度无人化价值趋势</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_trend\')">?</span><div class="panel-head-tag">近 6 个月</div></div></div><div class="panel-body"><div id="valueTrendChart" class="chart-box h280"></div></div></div>' +
+    '<div class="panel" style="flex:0.8"><div class="panel-head"><div class="panel-head-title">无人化投入产出趋势</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_trend\')">?</span><div class="panel-head-tag">近 6 个月里程与人工替代</div></div></div><div class="panel-body"><div id="valueTrendChart" class="chart-box h280"></div></div></div>' +
   '</div>' +
 
-  '<div class="panel"><div class="panel-head"><div class="panel-head-title">各公司近 6 个月完成率趋势</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_mini\')">?</span><div class="panel-head-tag">小 multiples 视图</div></div></div><div class="panel-body"><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">' +
+  '<div class="panel"><div class="panel-head"><div class="panel-head-title">各公司交付稳定性对比</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_mini\')">?</span><div class="panel-head-tag">小 multiples 视图 · 同一尺度横向对比</div></div></div><div class="panel-body"><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">' +
     COMPANIES.map(function(name, i) {
       return '<div style="text-align:center"><div style="font-size:11px;color:var(--text-sec);margin-bottom:6px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + COMPANY_COLORS[i] + ';margin-right:5px"></span>' + name + '</div><div id="valueMini_' + i + '" class="chart-box" style="height:140px"></div><div style="font-size:11px;color:var(--text-mute);margin-top:2px">当前 ' + fmtPct(MONTHLY[name].completion) + '</div></div>';
     }).join('') +
