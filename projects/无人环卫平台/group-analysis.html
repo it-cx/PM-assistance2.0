@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CITIBOT · 集团运营分析</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #F8FAFC;
+  --bg-panel: #FFFFFF;
+  --bg-card: #F1F5F9;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --text: #1E293B;
+  --text-sec: #64748B;
+  --text-mute: #94A3B8;
+  --blue: #0EA5E9;
+  --blue-dim: #0284C7;
+  --cyan: #06B6D4;
+  --amber: #F59E0B;
+  --green: #10B981;
+  --violet: #8B5CF6;
+  --rose: #EF4444;
+  --teal: #14B8A6;
+  --table-hover: #F1F5F9;
+  --table-stripe: #FAFBFC;
+}
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  overflow-y: auto; overflow-x: hidden; min-height: 100vh; font-size: 14px; line-height: 1.5;
+}
+html { scrollbar-width: thin; scrollbar-color: #CBD5E1 transparent; }
+html::-webkit-scrollbar { width: 5px; }
+html::-webkit-scrollbar-track { background: transparent; }
+html::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+
+.app { max-width: 1680px; margin: 0 auto; padding: 20px 28px 32px; }
+
+/* ===== 顶栏 ===== */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 16px 24px; margin-bottom: 18px;
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04); flex-wrap: wrap;
+}
+.topbar-l { display: flex; align-items: center; gap: 14px; }
+.logo {
+  width: 32px; height: 32px; display: grid; place-items: center;
+  background: var(--blue); color: #fff; border-radius: 8px;
+  font-weight: 700; font-size: 13px; letter-spacing: 0.02em;
+}
+.topbar-title { font-weight: 700; font-size: 17px; color: var(--text); }
+.topbar-sub { font-size: 12px; color: var(--text-mute); }
+
+.topbar-r { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.time-presets { display: flex; gap: 2px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+.time-presets button {
+  padding: 6px 14px; font-size: 12.5px; color: var(--text-sec); background: transparent;
+  border: none; cursor: pointer; border-radius: 6px; transition: all 0.15s; white-space: nowrap; font-weight: 500;
+}
+.time-presets button.active { background: var(--blue); color: #fff; }
+.time-presets button:hover:not(.active) { color: var(--text); background: rgba(0,0,0,0.04); }
+.btn-export {
+  padding: 6px 16px; font-size: 12.5px; color: var(--text-sec); font-weight: 500;
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-export:hover { border-color: var(--border-strong); color: var(--text); }
+
+/* ===== Tab 栏 ===== */
+.tab-bar {
+  display: flex; gap: 0; margin-bottom: 18px;
+  border-bottom: 2px solid var(--border); padding-bottom: 0;
+}
+.tab-bar button {
+  padding: 10px 22px; font-size: 14px; color: var(--text-sec); font-weight: 500;
+  background: transparent; border: none; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tab-bar button.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tab-bar button:hover:not(.active) { color: var(--text); }
+
+/* ===== 通用面板 ===== */
+.panel {
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+}
+.panel-head-title { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; }
+.panel-head-title::before { content: ''; width: 3px; height: 14px; background: var(--blue); border-radius: 2px; }
+.panel-head-tag { font-size: 12px; color: var(--text-mute); }
+.panel-head-right { display: flex; align-items: center; gap: 10px; }
+.panel-body { padding: 16px 20px; }
+
+/* 分析能力按钮 */
+.insight-btn {
+  width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  border: 1px solid var(--border); color: var(--text-mute);
+  background: var(--bg-card); transition: all 0.15s; flex-shrink: 0;
+}
+.insight-btn:hover { border-color: var(--blue); color: var(--blue); background: #EFF6FF; }
+
+/* 分析能力浮窗 */
+.insight-popover {
+  position: fixed; z-index: 200; max-width: 340px;
+  background: var(--bg-panel); border: 1px solid var(--border-strong);
+  border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  padding: 18px 20px; font-size: 13px; line-height: 1.7;
+  pointer-events: auto;
+}
+.insight-popover-title { font-weight: 600; color: var(--blue); margin-bottom: 8px; font-size: 13.5px; }
+.insight-popover-text { color: var(--text-sec); font-size: 12.5px; }
+.insight-popover-text ul { margin: 6px 0 0; padding-left: 18px; }
+.insight-popover-text li { margin-bottom: 4px; }
+
+/* ===== 统计卡片 ===== */
+.stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.stat-card {
+  padding: 16px 20px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
+  position: relative; overflow: hidden;
+}
+.stat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.stat-card.c0::before { background: var(--blue); }
+.stat-card.c1::before { background: var(--violet); }
+.stat-card.c2::before { background: var(--amber); }
+.stat-card.c3::before { background: var(--green); }
+.stat-card-label { font-size: 12px; color: var(--text-mute); margin-bottom: 6px; font-weight: 500; }
+.stat-card-val { font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.stat-card-val .unit { font-size: 12px; color: var(--text-sec); font-weight: 400; margin-left: 3px; }
+.stat-card-sub { font-size: 11.5px; color: var(--text-sec); margin-top: 4px; }
+.stat-card-sub.up { color: var(--green); }
+.stat-card-sub.down { color: var(--rose); }
+
+/* ===== 表格 ===== */
+.table-wrap { overflow-x: auto; }
+table.rank-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.rank-table thead th {
+  padding: 11px 14px; text-align: left; color: var(--text-mute);
+  font-weight: 600; font-size: 11px; letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--border); background: var(--table-stripe);
+  white-space: nowrap; cursor: pointer; user-select: none;
+}
+table.rank-table thead th:hover { color: var(--text); }
+table.rank-table thead th .sort-arrow { margin-left: 3px; opacity: 0.3; }
+table.rank-table tbody td {
+  padding: 12px 14px; color: var(--text); border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+table.rank-table tbody tr:hover td { background: var(--table-hover); cursor: pointer; }
+table.rank-table .cell-warn { color: var(--amber); font-weight: 600; }
+table.rank-table .cell-bad { color: var(--rose); font-weight: 600; }
+table.rank-table .cell-good { color: var(--green); }
+
+/* 展开行 */
+.expand-row td { padding: 0 14px 14px; border-bottom: 1px solid var(--border); background: var(--table-stripe); }
+.expand-inner { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.expand-mini-chart { height: 120px; }
+.expand-mini-label { font-size: 11px; color: var(--text-mute); margin-bottom: 4px; font-weight: 500; }
+
+/* ===== 弹窗 ===== */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px); z-index: 100;
+  display: grid; place-items: center; padding: 24px;
+}
+.modal-mask[hidden] { display: none; }
+.modal-card {
+  width: 100%; max-width: 900px; max-height: 85vh; overflow-y: auto;
+  background: var(--bg-panel); border: 1px solid var(--border-strong); border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+}
+.modal-head {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 22px; border-bottom: 1px solid var(--border);
+  background: var(--bg-panel); backdrop-filter: blur(8px);
+}
+.modal-title { font-weight: 700; font-size: 16px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+.modal-title::before { content: ''; width: 3px; height: 15px; background: var(--blue); border-radius: 2px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: grid; place-items: center;
+  background: #FEF2F2; border: 1px solid #FECACA; color: var(--rose); transition: all 0.15s;
+}
+.modal-close:hover { background: #FEE2E2; }
+.modal-body { padding: 20px 22px 24px; }
+
+/* ===== 图表容器 ===== */
+.chart-box { width: 100%; }
+.chart-box.h300 { height: 300px; }
+.chart-box.h280 { height: 280px; }
+.chart-box.h260 { height: 260px; }
+.chart-box.h240 { height: 240px; }
+
+/* ===== 结论卡片 ===== */
+.conclusion-card {
+  padding: 14px 18px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid; background: var(--bg-card);
+}
+.conclusion-card.crit { border-color: var(--rose); background: #FEF2F2; }
+.conclusion-card.warn { border-color: var(--amber); background: #FFFBEB; }
+.conclusion-card.info { border-color: var(--green); background: #ECFDF5; }
+.conclusion-card-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.conclusion-card.crit .conclusion-card-title { color: #B91C1C; }
+.conclusion-card.warn .conclusion-card-title { color: #B45309; }
+.conclusion-card.info .conclusion-card-title { color: #047857; }
+.conclusion-card-text { font-size: 12.5px; color: var(--text-sec); line-height: 1.6; }
+
+/* ===== 标签 ===== */
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 500;
+}
+.tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+.tag.good  { color: #047857; background: #ECFDF5; }
+.tag.good::before { background: #10B981; }
+.tag.warn  { color: #B45309; background: #FFFBEB; }
+.tag.warn::before { background: #F59E0B; }
+.tag.bad   { color: #B91C1C; background: #FEF2F2; }
+.tag.bad::before { background: #EF4444; }
+.tag.neutral { color: #64748B; background: #F1F5F9; }
+.tag.neutral::before { background: #94A3B8; }
+
+/* ===== 响应式 ===== */
+@media (max-width: 1200px) {
+  .stat-cards { grid-template-columns: repeat(2, 1fr); }
+  .expand-inner { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .topbar { flex-direction: column; align-items: flex-start; }
+  .stat-cards { grid-template-columns: 1fr; }
+  .tab-bar { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="logo">C</div>
+      <div>
+        <div class="topbar-title">CITIBOT 集团运营分析</div>
+        <div class="topbar-sub">多项目公司 · 无人清扫车运营数据 · 月度分析</div>
+      </div>
+    </div>
+    <div class="topbar-r">
+      <div class="time-presets" id="timePresets">
+        <button data-period="7d">近 7 天</button>
+        <button data-period="30d" class="active">近 30 天</button>
+        <button data-period="90d">近 90 天</button>
+        <button data-period="month">本月</button>
+        <button data-period="custom">自定义</button>
+      </div>
+      <button class="btn-export" id="btnExport">导出报表</button>
+    </div>
+  </div>
+
+  <div class="tab-bar" id="tabBar">
+    <button data-tab="overview" class="active">运营总览</button>
+    <button data-tab="efficiency">效率与能耗</button>
+    <button data-tab="safety">安全与接管</button>
+    <button data-tab="energy">补能与续航</button>
+    <button data-tab="value">质量与价值</button>
+  </div>
+
+  <div id="tabContent"></div>
+</div>
+
+<div class="modal-mask" id="modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" id="modalClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   数据集
+   ============================================================ */
+var COMPANIES = ['黄埔滨江', '浦东主干道', '徐汇商圈', '静安寺', '长宁商务区'];
+var COMPANY_COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
+
+var MONTHLY = {
+  '黄埔滨江': { mileage: 215, duration: 35.8, energy: 4850, water: 1280, takeovers: 28, tasks_done: 41, tasks_total: 50, completion: 82.0, online_rate: 92.9, vehicles: [
+    { id: 'VHC-01', model: 'SD15',  mileage: 58,  energy: 1120, range: 58, daily_avg: 42 },
+    { id: 'VHC-03', model: 'SD15',  mileage: 51,  energy: 1180, range: 55, daily_avg: 38 },
+    { id: 'VHC-09', model: 'SD22C', mileage: 72,  energy: 2240, range: 68, daily_avg: 45 },
+    { id: 'VHC-12', model: 'SD22C', mileage: 34,  energy: 310,  range: 62, daily_avg: 20 }
+  ]},
+  '浦东主干道': { mileage: 248, duration: 38.2, energy: 5200, water: 1450, takeovers: 12, tasks_done: 58, tasks_total: 64, completion: 90.6, online_rate: 100, vehicles: [
+    { id: 'VHC-02', model: 'SD15',  mileage: 62,  energy: 1230, range: 60, daily_avg: 45 },
+    { id: 'VHC-10', model: 'SD22C', mileage: 81,  energy: 2520, range: 72, daily_avg: 52 },
+    { id: 'VHC-07', model: 'SD15',  mileage: 58,  energy: 1080, range: 56, daily_avg: 42 },
+    { id: 'VHC-14', model: 'SD15',  mileage: 47,  energy: 370,  range: 54, daily_avg: 20 }
+  ]},
+  '徐汇商圈': { mileage: 182, duration: 30.1, energy: 6100, water: 1650, takeovers: 15, tasks_done: 35, tasks_total: 47, completion: 74.5, online_rate: 92.9, vehicles: [
+    { id: 'VHC-05', model: 'SD15',  mileage: 55,  energy: 1480, range: 50, daily_avg: 42 },
+    { id: 'VHC-11', model: 'SD22C', mileage: 68,  energy: 2290, range: 64, daily_avg: 48 },
+    { id: 'VHC-13', model: 'SD22C', mileage: 59,  energy: 2330, range: 58, daily_avg: 44 }
+  ]},
+  '静安寺':   { mileage: 156, duration: 24.6, energy: 2930, water: 980,  takeovers: 5,  tasks_done: 32, tasks_total: 32, completion: 100, online_rate: 100, vehicles: [
+    { id: 'VHC-06', model: 'SD15',  mileage: 88,  energy: 1650, range: 62, daily_avg: 48 },
+    { id: 'VHC-04', model: 'SD15',  mileage: 68,  energy: 1280, range: 58, daily_avg: 40 }
+  ]},
+  '长宁商务区': { mileage: 168, duration: 28.4, energy: 4450, water: 1050, takeovers: 18, tasks_done: 28, tasks_total: 45, completion: 62.2, online_rate: 85.7, vehicles: [
+    { id: 'VHC-08', model: 'SD15',  mileage: 105, energy: 2790, range: 46, daily_avg: 62 },
+    { id: 'VHC-14', model: 'SD22C', mileage: 63,  energy: 1660, range: 60, daily_avg: 38 }
+  ]}
+};
+
+function genDailyData(baseVal, variance, trend) {
+  var arr = [];
+  for (var i = 0; i < 30; i++) {
+    var tf = 1 + (trend || 0) * i / 30;
+    var dv = (Math.random() - 0.5) * 2 * variance;
+    arr.push(Math.max(0, Math.round((baseVal + dv) * tf * 10) / 10));
+  }
+  return arr;
+}
+
+var DAILY = {};
+COMPANIES.forEach(function(name, idx) {
+  var m = MONTHLY[name];
+  DAILY[name] = {
+    dailyMileage: genDailyData(m.mileage / 30, m.mileage / 60, idx === 0 ? 0.08 : idx === 4 ? -0.05 : 0.02),
+    dailyEnergy: genDailyData(m.energy / 30, m.energy / 50, idx === 2 ? 0.03 : -0.02),
+    dailyTakeovers: genDailyData(m.takeovers / 30, m.takeovers / 60, idx === 3 ? -0.1 : 0)
+  };
+});
+
+var MONTHLY_TREND = {};
+COMPANIES.forEach(function(name, idx) {
+  var m = MONTHLY[name];
+  MONTHLY_TREND[name] = {
+    months: ['1月','2月','3月','4月','5月','6月'],
+    mileage: [0,1,2,3,4,5].map(function(_, i) { return Math.round(m.mileage * (0.85 + i * 0.03 + (idx === 3 ? 0.05 : 0) + (Math.random() - 0.5) * 0.1)); }),
+    energy: [0,1,2,3,4,5].map(function(_, i) { return Math.round(m.energy * (0.9 + i * 0.02 + (idx === 2 ? 0.04 : 0) + (Math.random() - 0.5) * 0.06)); }),
+    takeovers: [0,1,2,3,4,5].map(function(_, i) { return Math.round(m.takeovers * (1.1 - i * 0.02 + (idx === 3 ? -0.05 : 0) + (Math.random() - 0.5) * 0.1)); }),
+    completion: [0,1,2,3,4,5].map(function(_, i) { return Math.min(100, Math.round(m.completion + (i - 5) * 1.5 + (Math.random() - 0.5) * 6)); })
+  };
+});
+
+var TAKEOVER_CAUSES = [
+  { name: '行人/非机动车横穿', pct: 42.5, count: 33 },
+  { name: '施工区域绕行', pct: 22.3, count: 17 },
+  { name: '信号灯/标识误识别', pct: 19.8, count: 15 },
+  { name: '道路临时封闭', pct: 9.2, count: 7 },
+  { name: '其他异常', pct: 6.2, count: 6 }
+];
+
+var COMPANY_TAKEOVER = {
+  '黄埔滨江': [{ name: '行人横穿', value: 12 }, { name: '施工绕行', value: 7 }, { name: '标识误识别', value: 5 }, { name: '道路封闭', value: 3 }, { name: '其他', value: 1 }],
+  '浦东主干道': [{ name: '行人横穿', value: 5 }, { name: '施工绕行', value: 3 }, { name: '标识误识别', value: 2 }, { name: '道路封闭', value: 1 }, { name: '其他', value: 1 }],
+  '徐汇商圈': [{ name: '行人横穿', value: 6 }, { name: '施工绕行', value: 2 }, { name: '标识误识别', value: 5 }, { name: '道路封闭', value: 1 }, { name: '其他', value: 1 }],
+  '静安寺':   [{ name: '行人横穿', value: 2 }, { name: '施工绕行', value: 1 }, { name: '标识误识别', value: 1 }, { name: '道路封闭', value: 1 }, { name: '其他', value: 0 }],
+  '长宁商务区': [{ name: '行人横穿', value: 8 }, { name: '施工绕行', value: 4 }, { name: '标识误识别', value: 2 }, { name: '道路封闭', value: 3 }, { name: '其他', value: 1 }]
+};
+
+var CHARGING_DATA = {};
+COMPANIES.forEach(function(name) {
+  var vs = MONTHLY[name].vehicles;
+  CHARGING_DATA[name] = {
+    vehicles: vs.map(function(v) {
+      return {
+        id: v.id, model: v.model, mileage: v.mileage, range: v.range, daily_avg: v.daily_avg,
+        charge_count: Math.round(v.mileage / (v.range * 0.7) * 30 + (Math.random() - 0.5) * 4),
+        fast_charge_min: Math.round(22 + Math.random() * 10),
+        slow_charge_min: Math.round(45 + Math.random() * 30)
+      };
+    })
+  };
+});
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+var currentTab = 'overview';
+var currentPeriod = '30d';
+var chartInstances = {};
+var _insightPopover = null;
+
+var INSIGHTS = {
+  overview_ranking: { title: '运营排名能分析什么', text: '通过归一化效率指标横向对比各公司，回答：<ul><li>哪个公司交付质量（完成率）最好/最差？</li><li>哪个公司成本控制（百公里能耗）优于同行？</li><li>哪个公司安全风险（百公里接管率）最高？</li><li>排名变化趋势——谁在进步、谁在退步？</li></ul>集团管理者据此调配资源、重点督导、考核奖惩。' },
+  overview_trend: { title: '里程趋势能分析什么', text: '全集团月度总里程变化趋势，回答：<ul><li>集团整体产出是在增长还是下降？</li><li>是否有季节性或突发性的产出波动？</li><li>趋势变化与投入（车辆、人力）是否匹配？</li></ul>如果里程持续增长，说明无人化投入在产生增量价值；如果下降，需排查是运力不足还是项目萎缩。' },
+  overview_completion: { title: '完成率趋势能分析什么', text: '各公司近 6 个月完成率走势，回答：<ul><li>哪家公司的交付质量在改善/恶化？</li><li>是否存在某公司持续低于警戒线的系统性问题？</li><li>改善的公司有什么经验可推广？恶化的公司需要什么干预？</li></ul>完成率是项目公司交付能力的核心标尺，比绝对里程更有管理意义。' },
+
+  eff_sd15: { title: 'SD15 能耗排名能分析什么', text: '同一车型（SD15）的百公里能耗横向对比，回答：<ul><li>同样车型，谁家电耗最低/最高？</li><li>能耗偏高的公司是否存在驾驶行为、路线规划或车辆老化问题？</li><li>标杆公司（能耗最低的）有什么可复制的做法？</li></ul>同车型对比消除了车辆规格差异，能耗差异直接反映运营管理水平。' },
+  eff_sd22c: { title: 'SD22C 能耗排名能分析什么', text: '同一车型（SD22C）的百公里能耗横向对比，回答：<ul><li>大型清扫车的电耗效率各公司差异有多大？</li><li>能耗异常偏高的是个别车辆还是整个公司的问题？</li></ul>点击行可下钻到单车明细，定位具体问题车辆。' },
+  eff_trend: { title: '能耗趋势能分析什么', text: '近 30 天各公司百公里能耗走势，回答：<ul><li>能耗是在持续下降（优化见效）还是上升（车辆老化/管理松懈）？</li><li>各公司的能耗曲线是否收敛（差距缩小）还是发散（差距拉大）？</li></ul>趋势比单点值更有管理价值——持续变差比绝对值高更需要干预。' },
+  eff_composition: { title: '能耗构成能分析什么', text: '全集团总能耗的用途分布，回答：<ul><li>能耗主要花在哪里——驱动、清扫、辅助还是待机？</li><li>待机能耗占比过高说明车辆调度不合理（闲置时间长）</li><li>清扫能耗占比过低可能意味着清扫强度不足</li></ul>帮助集团判断能耗优化的主要方向。' },
+
+  safety_ranking: { title: '接管排名能分析什么', text: '按百公里接管率排名（而不是接管绝对次数），回答：<ul><li>哪家公司的无人化安全水平最高/最低？</li><li>接管率高的公司是路线环境问题还是车辆/算法问题？</li><li>标杆公司（接管率最低）的路线特征和车辆配置可推广</li></ul>百公里接管率消除了里程差异，是公平的安全对比基准。' },
+  safety_causes: { title: '接管原因分布能分析什么', text: '全集团接管事件的根因分类，回答：<ul><li>接管的主要矛盾是什么——行人、施工还是传感器？</li><li>TOP3 原因占比多少？是否集中在少数几类问题？</li></ul>如果 80% 的接管来自 3 类原因，说明集团层面统一解决这几类问题即可大幅降低接管率，而非让各公司各自应对。' },
+  safety_stack: { title: '接管原因对比能分析什么', text: '各公司接管原因的堆叠对比，回答：<ul><li>不同公司面临的接管风险是否相同？</li><li>有的公司"行人横穿"占比特别高（路线环境问题），有的"标识误识别"高（传感器/算法问题）——对策完全不同</li></ul>避免集团"一刀切"式管理，帮助精准施策。' },
+  safety_conclusion: { title: '自动结论能分析什么', text: '系统从数据中自动提炼的管理洞察，回答：<ul><li>本月最需要关注的安全问题是什么？</li><li>哪家公司需要集团介入？</li><li>集团层面的共性问题和应对建议</li></ul>管理者不需要自己从图表中找答案，系统直接给出结论。' },
+
+  energy_range: { title: '续航匹配表能分析什么', text: '每辆车的满电续航 vs 日均作业里程对比，回答：<ul><li>哪些车辆续航严重不足，需要中间补电？</li><li>哪些车辆续航冗余过大（电池配置过度）？</li><li>续航不足的车辆集中在哪个公司、哪个车型？</li></ul>自动标注"紧张"和"不足"车辆，帮助集团判断是否需要调整排班或考虑电池升级。' },
+  energy_scatter: { title: '续航散点图能分析什么', text: '续航 vs 日均里程的散点分布，回答：<ul><li>全集团车辆的续航-需求匹配整体状况</li><li>落在"续航不足区"的车辆数量是否在增加（电池衰减趋势）</li></ul>如果某公司多辆车都落在不足区，可能是该项目路段特征导致续航需求过高，需调整路线设计。' },
+  energy_efficiency: { title: '充电效率能分析什么', text: '各公司快充段（30%-80%）实际时长 vs 理论时长对比，回答：<ul><li>哪个公司的充电效率最高/最低？</li><li>充电时长偏长可能是充电桩功率不足或电池老化</li><li>充电效率低直接影响车辆可用时长和运营成本</li></ul>集团可据此优化充电桩布局或统一充电策略。' },
+  energy_charge_scatter: { title: '充电次数散点能分析什么', text: '月里程 vs 充电次数的散点分布，回答：<ul><li>跑同样里程，谁充电次数明显偏多？</li><li>充电过频 = 电池续航衰减或充电策略不合理</li></ul>偏离拟合线的车辆值得重点检查电池健康度。' },
+
+  value_ranking: { title: '完成率排名能分析什么', text: '各公司当月任务完成率排名，含延期风险预估，回答：<ul><li>哪个公司可能无法按时交付？</li><li>剩余任务按当前速度需要多少天？</li><li>延期风险高的公司是否需要集团协调资源？</li></ul>预警机制让集团提前介入，而不是等延期发生后再应对。' },
+  value_trend: { title: '价值趋势能分析什么', text: '近 6 个月全集团清扫里程与替代人工工时的变化，回答：<ul><li>无人化投入是在持续创造增量价值还是遇到瓶颈？</li><li>里程增长 vs 人工替代的对应关系是否合理？</li><li>趋势持续向上说明无人化战略有效；停滞或下降需复盘原因</li></ul>这是集团向董事会汇报无人化 ROI 的核心依据。' },
+  value_mini: { title: '完成率趋势能分析什么', text: '各公司近 6 个月完成率的小 multiples 对比，回答：<ul><li>谁的完成率稳定、谁波动大？</li><li>波动大的公司是管理问题还是外部因素？</li><li>所有公司在同一尺度下，横向对比非常直观</li></ul>小 multiples 比把 5 条线画在同一张图上更清晰，避免"意大利面"图表。' }
+};
+
+function showInsight(key) {
+  if (_insightPopover) { _insightPopover.remove(); _insightPopover = null; }
+
+  var info = INSIGHTS[key];
+  if (!info) return;
+
+  var popover = document.createElement('div');
+  popover.className = 'insight-popover';
+  popover.innerHTML = '<div class="insight-popover-title">' + info.title + '</div><div class="insight-popover-text">' + info.text + '</div>';
+  popover.onclick = function(e) { e.stopPropagation(); };
+  document.body.appendChild(popover);
+
+  // Position relative to the clicked button
+  var btn = event && event.target ? event.target : null;
+  if (btn) {
+    var rect = btn.getBoundingClientRect();
+    var left = rect.right + 8;
+    var top = rect.top - 10;
+    if (left + 340 > window.innerWidth) { left = rect.left - 348; }
+    if (top + 300 > window.innerHeight) { top = window.innerHeight - 310; }
+    if (top < 10) top = 10;
+    popover.style.left = left + 'px';
+    popover.style.top = top + 'px';
+  }
+
+  _insightPopover = popover;
+
+  // Close on outside click
+  setTimeout(function() {
+    document.addEventListener('click', function closeInsight(e) {
+      if (!popover.contains(e.target)) {
+        popover.remove();
+        _insightPopover = null;
+        document.removeEventListener('click', closeInsight);
+      }
+    });
+  }, 10);
+}
+var _overviewData = [];
+var _overviewSortKey = 'completion';
+var _overviewSortDir = -1;
+var _expandedCompany = null;
+
+function fmt(n) {
+  if (n >= 10000) return n.toLocaleString('en-US');
+  if (Number.isInteger(n)) return String(n);
+  return n.toFixed(1);
+}
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+function tagHtml(text, type) { return '<span class="tag ' + type + '">' + text + '</span>'; }
+
+function disposeAllCharts() {
+  Object.keys(chartInstances).forEach(function(k) {
+    try { if (chartInstances[k]) { chartInstances[k].dispose(); } } catch(e) {}
+    delete chartInstances[k];
+  });
+}
+
+function initChart(domId, option) {
+  var el = document.getElementById(domId);
+  if (!el) return null;
+  if (chartInstances[domId]) { try { chartInstances[domId].dispose(); } catch(e) {} }
+  var chart = echarts.init(el);
+  chart.setOption(option);
+  chartInstances[domId] = chart;
+  return chart;
+}
+
+var ECHARTS_TEXT_COLOR = '#64748B';
+var ECHARTS_LINE_COLOR = '#E2E8F0';
+
+function baseLineOpt(data, color, smooth) {
+  smooth = smooth !== false;
+  return {
+    type: 'line', smooth: smooth, symbol: 'none', data: data,
+    lineStyle: { width: 2, color: color },
+    areaStyle: {
+      color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: color + '33' }, { offset: 1, color: 'transparent' }
+      ])
+    }
+  };
+}
+
+/* ============================================================
+   Tab 调度
+   ============================================================ */
+function switchTab(tab) {
+  currentTab = tab;
+  disposeAllCharts();
+  var container = document.getElementById('tabContent');
+  var html = '';
+  switch (tab) {
+    case 'overview': html = renderOverview(); break;
+    case 'efficiency': html = renderEfficiency(); break;
+    case 'safety': html = renderSafety(); break;
+    case 'energy': html = renderEnergy(); break;
+    case 'value': html = renderValue(); break;
+  }
+  container.innerHTML = html;
+
+  // 延迟挂载图表，确保 DOM 就绪
+  setTimeout(function() {
+    switch (tab) {
+      case 'overview': mountOverview(); break;
+      case 'efficiency': mountEfficiency(); break;
+      case 'safety': mountSafety(); break;
+      case 'energy': mountEnergy(); break;
+      case 'value': mountValue(); break;
+    }
+  }, 50);
+}
+
+/* ============================================================
+   Tab 1: 运营总览
+   ============================================================ */
+function renderOverview() {
+  var totalMileage = 0, totalDuration = 0, totalEnergy = 0, totalTakeovers = 0;
+  var totalTasksDone = 0, totalTasksTotal = 0, totalVehicles = 0;
+  COMPANIES.forEach(function(n) {
+    var m = MONTHLY[n];
+    totalMileage += m.mileage; totalDuration += m.duration; totalEnergy += m.energy;
+    totalTakeovers += m.takeovers; totalTasksDone += m.tasks_done; totalTasksTotal += m.tasks_total;
+    totalVehicles += m.vehicles.length;
+  });
+  var avgComp = totalTasksTotal > 0 ? (totalTasksDone / totalTasksTotal * 100) : 0;
+  var avgPerVehicle = totalMileage / totalVehicles; // 单车月均里程
+
+  // 按完成率预排序
+  _overviewData = COMPANIES.map(function(name, i) {
+    var m = MONTHLY[name];
+    return {
+      name: name, idx: i,
+      completion: m.completion,
+      kwh100: m.energy / m.mileage * 100,
+      takeoverRate: m.takeovers / m.mileage * 100,
+      vehicles: m.vehicles.length,
+      mileage: m.mileage, energy: m.energy, takeovers: m.takeovers
+    };
+  }).sort(function(a, b) { return b.completion - a.completion; });
+  _overviewSortKey = 'completion';
+  _overviewSortDir = -1;
+
+  // 集团基准值
+  var grpKwh100 = totalEnergy / totalMileage * 100;
+  var grpTakeoverRate = totalTakeovers / totalMileage * 100;
+
+  return '<div class="stat-cards">' +
+    '<div class="stat-card c0"><div class="stat-card-label">全集团清扫总里程</div><div class="stat-card-val">' + fmt(totalMileage) + '<span class="unit">km</span></div><div class="stat-card-sub up">▲ +8.2% vs 上月</div></div>' +
+    '<div class="stat-card c1"><div class="stat-card-label">综合完成率</div><div class="stat-card-val">' + fmtPct(avgComp) + '</div><div class="stat-card-sub up">▲ +3.2pp vs 上月</div></div>' +
+    '<div class="stat-card c2"><div class="stat-card-label">集团百公里能耗</div><div class="stat-card-val">' + fmt(grpKwh100) + '<span class="unit">kWh</span></div><div class="stat-card-sub down">▼ -2.1 vs 上月</div></div>' +
+    '<div class="stat-card c3"><div class="stat-card-label">集团百公里接管率</div><div class="stat-card-val">' + fmt(grpTakeoverRate) + '<span class="unit">次</span></div><div class="stat-card-sub down">▼ -0.3 vs 上月</div></div>' +
+  '</div>' +
+
+  // 排名表：归一化可比指标
+  '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">项目公司运营排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_ranking\')">?</span><div class="panel-head-tag">按归一化效率指标对比 · 点击表头排序</div></div></div>' +
+  '<div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr>' +
+    '<th onclick="sortOverview(\'name\')">公司<span class="sort-arrow">↕</span></th>' +
+    '<th>车辆</th>' +
+    '<th onclick="sortOverview(\'completion\')">完成率<span class="sort-arrow">↕</span></th>' +
+    '<th onclick="sortOverview(\'kwh100\')">百km能耗<span class="sort-arrow">↕</span></th>' +
+    '<th onclick="sortOverview(\'takeoverRate\')">百km接管率<span class="sort-arrow">↕</span></th>' +
+  '</tr></thead><tbody id="overviewTbody"></tbody></table></div>' +
+  '<div style="font-size:11px;color:var(--text-mute);margin-top:10px;line-height:1.6">' +
+    '排名逻辑：集团管理者关注的是各公司<strong>效率与质量</strong>，而非绝对值。百公里能耗反映成本效率；百公里接管率反映安全水平；完成率反映交付质量。' +
+    '默认按完成率排序，点击表头可切换。' +
+  '</div></div></div>' +
+
+  // 底部双图
+  '<div style="display:flex;gap:14px;">' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">全集团月度里程趋势（近 6 个月）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_trend\')">?</span></div></div><div class="panel-body"><div id="overviewTrendChart" class="chart-box h240"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">各公司完成率趋势（近 6 个月）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_completion\')">?</span><div class="panel-head-tag">交付质量可比</div></div></div><div class="panel-body"><div id="overviewCompletionChart" class="chart-box h240"></div></div></div>' +
+  '</div>';
+}
+
+function renderOverviewTable() {
+  var tbody = document.getElementById('overviewTbody');
+  if (!tbody) return;
+  var totalM = 0, totalE = 0, totalT = 0;
+  _overviewData.forEach(function(r) { totalM += r.mileage; totalE += r.energy; totalT += r.takeovers; });
+  var grpKwh100 = totalE / totalM * 100;
+  var grpTakeoverRate = totalT / totalM * 100;
+
+  tbody.innerHTML = _overviewData.map(function(r) {
+    var cCls = r.completion < 70 ? 'cell-bad' : r.completion < 80 ? 'cell-warn' : r.completion >= 95 ? 'cell-good' : '';
+    var eDelta = (r.kwh100 - grpKwh100) / grpKwh100;
+    var eCls = eDelta > 0.10 ? 'cell-bad' : eDelta > 0.05 ? 'cell-warn' : eDelta < -0.05 ? 'cell-good' : '';
+    var tDelta = (r.takeoverRate - grpTakeoverRate) / grpTakeoverRate;
+    var tCls = tDelta > 0.5 ? 'cell-bad' : tDelta > 0.2 ? 'cell-warn' : tDelta < -0.3 ? 'cell-good' : '';
+    return '<tr>' +
+      '<td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[r.idx] + ';margin-right:8px"></span>' + r.name + '</td>' +
+      '<td>' + r.vehicles + ' 辆</td>' +
+      '<td class="' + cCls + '">' + fmtPct(r.completion) + '</td>' +
+      '<td class="' + eCls + '">' + fmt(r.kwh100) + '</td>' +
+      '<td class="' + tCls + '">' + fmt(r.takeoverRate) + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function sortOverview(key) {
+  if (_overviewSortKey === key) { _overviewSortDir *= -1; }
+  else { _overviewSortKey = key; _overviewSortDir = (key === 'completion') ? -1 : 1; }
+  var dir = _overviewSortDir;
+  _overviewData.sort(function(a, b) {
+    if (key === 'name') return dir * a.name.localeCompare(b.name);
+    return dir * (a[key] - b[key]);
+  });
+  renderOverviewTable();
+}
+
+function toggleExpandRow(tr, company) {
+  var existing = tr.parentElement.querySelector('.expand-row');
+  if (existing) { existing.remove(); _expandedCompany = null; return; }
+  document.querySelectorAll('.expand-row').forEach(function(e) { e.remove(); });
+
+  var trend = MONTHLY_TREND[company];
+  var m = MONTHLY[company];
+  var vCount = m.vehicles.length;
+  // 计算该公司近 6 个月的单车月均里程和百公里能耗趋势
+  var perVehicleTrend = trend.mileage.map(function(v) { return Math.round(v / vCount); });
+  var kwh100Trend = trend.energy.map(function(e, i) { return Math.round(e / trend.mileage[i] * 1000) / 10; });
+
+  var newRow = document.createElement('tr');
+  newRow.className = 'expand-row';
+  newRow.innerHTML = '<td colspan="6"><div class="expand-inner">' +
+    '<div><div class="expand-mini-label">完成率趋势（近 6 个月）</div><div class="expand-mini-chart" id="expCompletion_' + company + '"></div></div>' +
+    '<div><div class="expand-mini-label">单车月均里程趋势（近 6 个月）</div><div class="expand-mini-chart" id="expPerVehicle_' + company + '"></div></div>' +
+    '<div><div class="expand-mini-label">百公里能耗趋势（近 6 个月）</div><div class="expand-mini-chart" id="expKwh100_' + company + '"></div></div>' +
+  '</div></td>';
+  tr.after(newRow);
+  _expandedCompany = company;
+
+  setTimeout(function() {
+    var color = COMPANY_COLORS[COMPANIES.indexOf(company)];
+    [{ id: 'expCompletion_' + company, data: trend.completion, color: color, max: 100 },
+     { id: 'expPerVehicle_' + company, data: perVehicleTrend, color: '#10B981', max: null },
+     { id: 'expKwh100_' + company, data: kwh100Trend, color: '#F59E0B', max: null }
+    ].forEach(function(cfg) {
+      var yOpt = cfg.max ? { type: 'value', show: false, min: 0, max: cfg.max } : { type: 'value', show: false };
+      initChart(cfg.id, {
+        backgroundColor: 'transparent',
+        grid: { left: 0, right: 0, top: 4, bottom: 0 },
+        xAxis: { type: 'category', show: false, data: trend.months },
+        yAxis: yOpt,
+        series: [baseLineOpt(cfg.data, cfg.color)]
+      });
+    });
+  }, 100);
+}
+
+function mountOverview() {
+  renderOverviewTable();
+
+  // 左图：全集团月度总里程趋势
+  var monthlyTotal = [0, 0, 0, 0, 0, 0];
+  COMPANIES.forEach(function(name) {
+    MONTHLY_TREND[name].mileage.forEach(function(v, i) { monthlyTotal[i] += v; });
+  });
+
+  initChart('overviewTrendChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    grid: { left: 48, right: 16, top: 20, bottom: 24 },
+    xAxis: { type: 'category', data: ['1月','2月','3月','4月','5月','6月'], axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: 'km', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    series: [baseLineOpt(monthlyTotal, '#0EA5E9')]
+  });
+
+  // 右图：各公司完成率趋势
+  initChart('overviewCompletionChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, top: 0, right: 0, itemWidth: 10, itemHeight: 7 },
+    grid: { left: 48, right: 16, top: 30, bottom: 24 },
+    xAxis: { type: 'category', data: ['1月','2月','3月','4月','5月','6月'], axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: '%', min: 0, max: 100, nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    series: COMPANIES.map(function(name, i) {
+      return { name: name, type: 'line', smooth: true, symbol: 'circle', symbolSize: 4,
+        data: MONTHLY_TREND[name].completion,
+        lineStyle: { width: 1.5, color: COMPANY_COLORS[i] },
+        itemStyle: { color: COMPANY_COLORS[i] } };
+    })
+  });
+}
+
+/* ============================================================
+   Tab 2: 效率与能耗
+   ============================================================ */
+function renderEfficiency() {
+  var sd15 = [], sd22c = [];
+  COMPANIES.forEach(function(name, i) {
+    var m = MONTHLY[name];
+    var v15 = m.vehicles.filter(function(v) { return v.model === 'SD15'; });
+    var v22 = m.vehicles.filter(function(v) { return v.model === 'SD22C'; });
+    if (v15.length) {
+      var tm = v15.reduce(function(s, v) { return s + v.mileage; }, 0);
+      var te = v15.reduce(function(s, v) { return s + v.energy; }, 0);
+      sd15.push({ name: name, idx: i, vehicles: v15.length, mileage: tm, energy: te, kwh100: te / tm * 100, baseline: 22 });
+    }
+    if (v22.length) {
+      var tm2 = v22.reduce(function(s, v) { return s + v.mileage; }, 0);
+      var te2 = v22.reduce(function(s, v) { return s + v.energy; }, 0);
+      sd22c.push({ name: name, idx: i, vehicles: v22.length, mileage: tm2, energy: te2, kwh100: te2 / tm2 * 100, baseline: 30 });
+    }
+  });
+
+  function renderTypeTable(data, typeName, insightKey) {
+    var sorted = data.slice().sort(function(a, b) { return a.kwh100 - b.kwh100; });
+    return '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">' + typeName + ' 车型能耗排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'' + insightKey + '\')">?</span><div class="panel-head-tag">基准线 ' + (data[0] ? data[0].baseline : '-') + ' kWh/100km · 越低越优</div></div></div>' +
+    '<div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>车辆数</th><th>百km能耗</th><th>vs 基准</th><th>评价</th></tr></thead><tbody>' +
+    sorted.map(function(r) {
+      var delta = (r.kwh100 - r.baseline) / r.baseline * 100;
+      var dCls = delta < -5 ? 'cell-good' : delta > 10 ? 'cell-bad' : delta > 5 ? 'cell-warn' : '';
+      var tg = delta < -5 ? tagHtml('优秀', 'good') : delta > 10 ? tagHtml('偏高', 'bad') : delta > 5 ? tagHtml('关注', 'warn') : tagHtml('正常', 'neutral');
+      return '<tr onclick="openVehicleDetail(\'' + r.name + '\', \'' + typeName + '\')"><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[r.idx] + ';margin-right:8px"></span>' + r.name + '</td><td>' + r.vehicles + '</td><td class="' + dCls + '">' + fmt(r.kwh100) + '</td><td class="' + dCls + '">' + (delta >= 0 ? '+' : '') + fmtPct(delta) + '</td><td>' + tg + '</td></tr>';
+    }).join('') +
+    '</tbody></table></div></div></div>';
+  }
+
+  return renderTypeTable(sd15, 'SD15', 'eff_sd15') + renderTypeTable(sd22c, 'SD22C', 'eff_sd22c') +
+  '<div style="display:flex;gap:14px;">' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">近 30 天百公里能耗趋势</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'eff_trend\')">?</span><div class="panel-head-tag">各公司对比</div></div></div><div class="panel-body"><div id="effTrendChart" class="chart-box h280"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">能耗构成 · 全集团</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'eff_composition\')">?</span></div></div><div class="panel-body"><div id="effPieChart" class="chart-box h280"></div></div></div>' +
+  '</div>';
+}
+
+function mountEfficiency() {
+  initChart('effTrendChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, top: 0, right: 0, itemWidth: 10, itemHeight: 7 },
+    grid: { left: 48, right: 16, top: 30, bottom: 24 },
+    xAxis: { type: 'category', data: (function(){var a=[];for(var i=0;i<30;i++)a.push(String(i+1));return a;})(), axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: 'kWh/100km', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    series: COMPANIES.map(function(name, i) {
+      return { name: name, type: 'line', smooth: true, symbol: 'none',
+        data: DAILY[name].dailyEnergy.map(function(e, j) { return Math.round(e / DAILY[name].dailyMileage[j] * 1000) / 10; }),
+        lineStyle: { width: 1.5, color: COMPANY_COLORS[i] } };
+    })
+  });
+
+  initChart('effPieChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', formatter: '{b}: {c} kWh ({d}%)' },
+    legend: { bottom: 0, textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 11 }, itemWidth: 10, itemHeight: 8 },
+    series: [{
+      type: 'pie', radius: ['45%', '70%'],
+      label: { color: '#1E293B', fontSize: 10, formatter: '{d}%' },
+      labelLine: { lineStyle: { color: '#94A3B8' } },
+      itemStyle: { borderColor: '#fff', borderWidth: 2 },
+      data: [
+        { name: '驱动能耗', value: 12400, itemStyle: { color: '#0EA5E9' } },
+        { name: '清扫能耗', value: 9800,  itemStyle: { color: '#F59E0B' } },
+        { name: '辅助系统', value: 4200,  itemStyle: { color: '#14B8A6' } },
+        { name: '待机能耗', value: 3130,  itemStyle: { color: '#8B5CF6' } }
+      ]
+    }]
+  });
+}
+
+function openVehicleDetail(company, type) {
+  var m = MONTHLY[company];
+  var vehicles = m.vehicles.filter(function(v) { return v.model === type; });
+  var baseline = type === 'SD15' ? 22 : 30;
+  document.getElementById('modalTitle').innerHTML = company + ' · ' + type + ' 车辆明细';
+  document.getElementById('modalBody').innerHTML = '<div class="table-wrap"><table class="rank-table"><thead><tr><th>车辆编号</th><th>车型</th><th>月里程 (km)</th><th>月能耗 (kWh)</th><th>百km能耗</th><th>vs 基准</th><th>评价</th></tr></thead><tbody>' +
+    vehicles.map(function(v) {
+      var kwh100 = v.energy / v.mileage * 100, delta = (kwh100 - baseline) / baseline * 100;
+      var dCls = delta < -5 ? 'cell-good' : delta > 10 ? 'cell-bad' : delta > 5 ? 'cell-warn' : '';
+      var tg = delta < -5 ? tagHtml('优秀', 'good') : delta > 10 ? tagHtml('偏高', 'bad') : delta > 5 ? tagHtml('关注', 'warn') : tagHtml('正常', 'neutral');
+      return '<tr><td>' + v.id + '</td><td>' + v.model + '</td><td>' + fmt(v.mileage) + '</td><td>' + fmt(v.energy) + '</td><td class="' + dCls + '">' + fmt(kwh100) + '</td><td class="' + dCls + '">' + (delta >= 0 ? '+' : '') + fmtPct(delta) + '</td><td>' + tg + '</td></tr>';
+    }).join('') +
+    '</tbody></table></div>';
+  document.getElementById('modal').hidden = false;
+}
+
+/* ============================================================
+   Tab 3: 安全与接管
+   ============================================================ */
+function renderSafety() {
+  var totalTakeovers = 0, totalMileage = 0;
+  COMPANIES.forEach(function(n) { totalTakeovers += MONTHLY[n].takeovers; totalMileage += MONTHLY[n].mileage; });
+  var globalRate = totalTakeovers / totalMileage * 100;
+
+  var rows = COMPANIES.map(function(name, i) {
+    var m = MONTHLY[name], rate = m.takeovers / m.mileage * 100;
+    return { name: name, idx: i, takeovers: m.takeovers, mileage: m.mileage, rate: rate };
+  }).sort(function(a, b) { return b.rate - a.rate; });
+
+  var worst = rows[0], best = rows[rows.length - 1];
+  var top3 = TAKEOVER_CAUSES.slice(0, 3);
+  var top3Pct = top3.reduce(function(s, c) { return s + c.pct; }, 0);
+
+  return '<div class="stat-cards">' +
+    '<div class="stat-card c0"><div class="stat-card-label">全集团接管总次数</div><div class="stat-card-val">' + totalTakeovers + '<span class="unit">次</span></div><div class="stat-card-sub down">▼ -12% vs 上月</div></div>' +
+    '<div class="stat-card c1"><div class="stat-card-label">百公里接管率</div><div class="stat-card-val">' + fmt(globalRate) + '<span class="unit">次/100km</span></div><div class="stat-card-sub down">▼ -0.3 vs 上月</div></div>' +
+    '<div class="stat-card c2"><div class="stat-card-label">高严重度事件</div><div class="stat-card-val">8<span class="unit">次</span></div><div class="stat-card-sub">占全集团 10.3%</div></div>' +
+    '<div class="stat-card c3"><div class="stat-card-label">安全运行天数</div><div class="stat-card-val">187<span class="unit">天</span></div><div class="stat-card-sub">无重大安全事故</div></div>' +
+  '</div>' +
+
+  '<div style="display:flex;gap:14px;margin-bottom:14px;">' +
+    '<div class="panel" style="flex:1.2"><div class="panel-head"><div class="panel-head-title">项目公司接管排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_ranking\')">?</span><div class="panel-head-tag">按百公里接管率降序</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>接管次数</th><th>百km接管率</th><th>vs 集团均值</th><th>评价</th></tr></thead><tbody>' +
+    rows.map(function(r) {
+      var vsAvg = (r.rate - globalRate) / globalRate * 100;
+      var rCls = vsAvg > 50 ? 'cell-bad' : vsAvg > 20 ? 'cell-warn' : vsAvg < -30 ? 'cell-good' : '';
+      var tg = vsAvg > 50 ? tagHtml('高风险', 'bad') : vsAvg > 20 ? tagHtml('偏高', 'warn') : vsAvg < -30 ? tagHtml('优秀', 'good') : tagHtml('正常', 'neutral');
+      return '<tr onclick="openSafetyDetail(\'' + r.name + '\')"><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[r.idx] + ';margin-right:8px"></span>' + r.name + '</td><td>' + r.takeovers + '</td><td class="' + rCls + '">' + fmt(r.rate) + '</td><td class="' + rCls + '">' + (vsAvg >= 0 ? '+' : '') + fmtPct(vsAvg) + '</td><td>' + tg + '</td></tr>';
+    }).join('') +
+    '</tbody></table></div></div></div>' +
+
+    '<div class="panel" style="flex:0.8"><div class="panel-head"><div class="panel-head-title">全集团接管原因分布</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_causes\')">?</span><div class="panel-head-tag">TOP3 占 ' + top3Pct.toFixed(0) + '%</div></div></div><div class="panel-body"><div id="safetyCauseChart" class="chart-box h280"></div></div></div>' +
+  '</div>' +
+
+  '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">各公司接管原因对比</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_stack\')">?</span><div class="panel-head-tag">堆叠柱状图 · 按原因分层</div></div></div><div class="panel-body"><div id="safetyStackChart" class="chart-box h260"></div></div></div>' +
+
+  '<div><div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px"><span style="width:3px;height:13px;background:var(--blue);border-radius:2px"></span>系统自动分析结论</div><div class="panel-head-right" style="margin-bottom:10px"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'safety_conclusion\')">?</span></div>' +
+    '<div class="conclusion-card crit"><div class="conclusion-card-title">' + worst.name + '：接管率 ' + fmt(worst.rate) + ' 次/百公里，为全集团均值 ' + fmt(globalRate) + ' 的 ' + fmt(worst.rate / globalRate) + ' 倍</div><div class="conclusion-card-text">' + (function() {
+      var causes = COMPANY_TAKEOVER[worst.name], top = causes.slice().sort(function(a,b){return b.value-a.value;})[0];
+      return '主要原因为' + top.name + '（占 ' + (top.value/worst.takeovers*100).toFixed(0) + '%），建议重点核查该公司的作业环境特征，考虑调整路线或增加避障训练数据。';
+    })() + '</div></div>' +
+    '<div class="conclusion-card warn"><div class="conclusion-card-title">TOP3 接管原因（' + top3.map(function(c){return c.name;}).join('、') + '）合计占全集团 ' + top3Pct.toFixed(0) + '%</div><div class="conclusion-card-text">这三类问题是全集团共性矛盾。"行人/非机动车横穿"占比最高（' + top3[0].pct.toFixed(1) + '%），建议集团层面统一优化避障策略和作业时段选择，避免各公司各自应对。</div></div>' +
+    '<div class="conclusion-card info"><div class="conclusion-card-title">' + best.name + '：接管率仅 ' + fmt(best.rate) + ' 次/百公里</div><div class="conclusion-card-text">其作业路线特征和车辆配置值得其他公司参考。建议将其作业规范（如路线选择、避障参数设置）作为集团标准推广。</div></div>' +
+  '</div>';
+}
+
+function mountSafety() {
+  initChart('safetyCauseChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', formatter: '{b}: {c} 次 ({d}%)' },
+    legend: { bottom: 0, textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, itemWidth: 10, itemHeight: 7 },
+    series: [{
+      type: 'pie', radius: ['50%', '75%'],
+      label: { color: '#1E293B', fontSize: 10 },
+      labelLine: { lineStyle: { color: '#94A3B8' } },
+      itemStyle: { borderColor: '#fff', borderWidth: 2 },
+      data: TAKEOVER_CAUSES.map(function(c) { return { name: c.name, value: c.count }; })
+    }]
+  });
+
+  var causeNames = COMPANY_TAKEOVER['黄埔滨江'].map(function(c) { return c.name; });
+  var causeColors = ['#EF4444', '#F59E0B', '#0EA5E9', '#8B5CF6', '#94A3B8'];
+  initChart('safetyStackChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, bottom: 0, itemWidth: 10, itemHeight: 7 },
+    grid: { left: 48, right: 16, top: 18, bottom: 36 },
+    xAxis: { type: 'category', data: COMPANIES, axisLabel: { color: '#64748B', fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: '接管次数', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    series: causeNames.map(function(cause, i) {
+      return { name: cause, type: 'bar', stack: 'total', barWidth: 32,
+        data: COMPANIES.map(function(name) { return COMPANY_TAKEOVER[name][i].value; }),
+        itemStyle: { color: causeColors[i], borderRadius: i === causeNames.length - 1 ? [4, 4, 0, 0] : 0 } };
+    })
+  });
+}
+
+function openSafetyDetail(company) {
+  var causes = COMPANY_TAKEOVER[company], m = MONTHLY[company];
+  document.getElementById('modalTitle').innerHTML = company + ' · 接管事件明细';
+  document.getElementById('modalBody').innerHTML =
+    '<div class="stat-cards" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">' +
+    '<div class="stat-card c0"><div class="stat-card-label">月接管数</div><div class="stat-card-val">' + m.takeovers + '<span class="unit">次</span></div></div>' +
+    '<div class="stat-card c2"><div class="stat-card-label">百km接管率</div><div class="stat-card-val">' + fmt(m.takeovers/m.mileage*100) + '</div></div>' +
+    '<div class="stat-card c3"><div class="stat-card-label">月清扫里程</div><div class="stat-card-val">' + fmt(m.mileage) + '<span class="unit">km</span></div></div>' +
+    '</div>' +
+    '<div class="table-wrap"><table class="rank-table"><thead><tr><th>接管原因</th><th>次数</th><th>占比</th></tr></thead><tbody>' +
+    causes.map(function(c) { return '<tr><td>' + c.name + '</td><td>' + c.value + '</td><td>' + fmtPct(c.value/m.takeovers*100) + '</td></tr>'; }).join('') +
+    '</tbody></table></div>';
+  document.getElementById('modal').hidden = false;
+}
+
+/* ============================================================
+   Tab 4: 补能与续航
+   ============================================================ */
+function renderEnergy() {
+  var allVehicles = [];
+  COMPANIES.forEach(function(name, i) {
+    MONTHLY[name].vehicles.forEach(function(v) {
+      allVehicles.push({ company: name, companyIdx: i, id: v.id, model: v.model, range: v.range, daily_avg: v.daily_avg, mileage: v.mileage });
+    });
+  });
+
+  var sortedByRange = allVehicles.slice().sort(function(a, b) { return a.range - b.range; });
+  var minR = sortedByRange[0], maxR = sortedByRange[sortedByRange.length - 1];
+  var avgRange = allVehicles.reduce(function(s, v) { return s + v.range; }, 0) / allVehicles.length;
+  var totalCharges = allVehicles.reduce(function(s, v) { return s + Math.round(v.mileage / v.range * 30); }, 0);
+  var riskyCount = allVehicles.filter(function(v) { return v.range < v.daily_avg * 1.2; }).length;
+
+  return '<div class="stat-cards">' +
+    '<div class="stat-card c0"><div class="stat-card-label">全集团车辆总数</div><div class="stat-card-val">' + allVehicles.length + '<span class="unit">辆</span></div><div class="stat-card-sub">SD15 ×' + allVehicles.filter(function(v){return v.model==='SD15';}).length + ' · SD22C ×' + allVehicles.filter(function(v){return v.model==='SD22C';}).length + '</div></div>' +
+    '<div class="stat-card c1"><div class="stat-card-label">平均满电续航</div><div class="stat-card-val">' + fmt(avgRange) + '<span class="unit">km</span></div><div class="stat-card-sub">最长 ' + maxR.range + 'km · 最短 ' + minR.range + 'km</div></div>' +
+    '<div class="stat-card c2"><div class="stat-card-label">月充电总次数</div><div class="stat-card-val">' + totalCharges + '<span class="unit">次</span></div><div class="stat-card-sub">日均 ' + fmt(totalCharges / 30) + ' 次</div></div>' +
+    '<div class="stat-card c3"><div class="stat-card-label">续航不足车辆</div><div class="stat-card-val">' + riskyCount + '<span class="unit">辆</span></div><div class="stat-card-sub down">⚠ 需关注</div></div>' +
+  '</div>' +
+
+  '<div style="display:flex;gap:14px;margin-bottom:14px;">' +
+    '<div class="panel" style="flex:1.3"><div class="panel-head"><div class="panel-head-title">车辆续航匹配表</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_range\')">?</span><div class="panel-head-tag">满电续航 vs 日均里程 · 自动标注风险</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>车辆</th><th>车型</th><th>满电续航</th><th>日均里程</th><th>电量冗余</th></tr></thead><tbody>' +
+    sortedByRange.map(function(v) {
+      var red = v.range - v.daily_avg;
+      var rCls = red > 20 ? 'cell-good' : red > 10 ? '' : red > 0 ? 'cell-warn' : 'cell-bad';
+      var st = red > 20 ? tagHtml('充足', 'good') : red > 10 ? tagHtml('正常', 'neutral') : red > 0 ? tagHtml('紧张', 'warn') : tagHtml('不足', 'bad');
+      return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[v.companyIdx] + ';margin-right:8px"></span>' + v.company + '</td><td>' + v.id + '</td><td>' + v.model + '</td><td>' + fmt(v.range) + ' km</td><td>' + fmt(v.daily_avg) + ' km</td><td class="' + rCls + '">' + st + '</td></tr>';
+    }).join('') +
+    '</tbody></table></div></div></div>' +
+    '<div class="panel" style="flex:0.7"><div class="panel-head"><div class="panel-head-title">续航 vs 日均里程对比</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_scatter\')">?</span></div></div><div class="panel-body"><div id="energyScatter" class="chart-box h300"></div></div></div>' +
+  '</div>' +
+
+  '<div style="display:flex;gap:14px;">' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">充电效率对比（30%-80% 快充段）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_efficiency\')">?</span><div class="panel-head-tag">实际 vs 理论充电时长</div></div></div><div class="panel-body"><div id="chargeEfficiencyChart" class="chart-box h240"></div></div></div>' +
+    '<div class="panel" style="flex:0.7"><div class="panel-head"><div class="panel-head-title">充电次数 vs 里程散点分析</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_charge_scatter\')">?</span><div class="panel-head-tag">偏离拟合线 = 充电异常频繁</div></div></div><div class="panel-body"><div id="chargeScatterChart" class="chart-box h240"></div></div></div>' +
+  '</div>';
+}
+
+function mountEnergy() {
+  var allVehicles = [];
+  COMPANIES.forEach(function(name, i) {
+    MONTHLY[name].vehicles.forEach(function(v) {
+      allVehicles.push({ company: name, companyIdx: i, id: v.id, model: v.model, range: v.range, daily_avg: v.daily_avg });
+    });
+  });
+
+  initChart('energyScatter', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', formatter: function(p) { return p.data[2] + '<br/>' + p.data[3] + '<br/>续航: ' + p.data[0] + ' km<br/>日均: ' + p.data[1] + ' km'; } },
+    grid: { left: 48, right: 24, top: 20, bottom: 32 },
+    xAxis: { type: 'value', name: '满电续航 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: '日均里程 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    series: [{
+      type: 'scatter', symbolSize: 14,
+      data: allVehicles.map(function(v) {
+        return { value: [v.range, v.daily_avg, v.company, v.id + ' (' + v.model + ')'],
+          itemStyle: { color: COMPANY_COLORS[v.companyIdx] } };
+      })
+    }]
+  });
+
+  var chargeData = COMPANIES.map(function(name, i) {
+    var cds = CHARGING_DATA[name];
+    var avg = cds.vehicles.reduce(function(s, v) { return s + v.fast_charge_min; }, 0) / cds.vehicles.length;
+    return { name: name, idx: i, actual: avg };
+  });
+
+  initChart('chargeEfficiencyChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, top: 0, right: 0, itemWidth: 10, itemHeight: 7 },
+    grid: { left: 48, right: 16, top: 28, bottom: 24 },
+    xAxis: { type: 'category', data: chargeData.map(function(d) { return d.name; }), axisLabel: { color: '#64748B', fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: '分钟', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    series: [
+      { name: '实际快充时长', type: 'bar', barWidth: 20, data: chargeData.map(function(d) { return { value: d.actual, itemStyle: { color: COMPANY_COLORS[d.idx], borderRadius: [4,4,0,0] } }; }) },
+      { name: '理论时长 (25min)', type: 'line', symbol: 'none', data: chargeData.map(function() { return 25; }), lineStyle: { color: '#94A3B8', width: 1.5, type: 'dashed' } }
+    ]
+  });
+
+  // 充电次数 vs 里程散点
+  var csd = [];
+  COMPANIES.forEach(function(name, i) {
+    CHARGING_DATA[name].vehicles.forEach(function(v) {
+      csd.push({ value: [v.mileage, v.charge_count, name, v.id], itemStyle: { color: COMPANY_COLORS[i] } });
+    });
+  });
+  initChart('chargeScatterChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', formatter: function(p) { return p.data[2] + ' · ' + p.data[3] + '<br/>月里程: ' + p.data[0] + ' km<br/>充电次数: ' + p.data[1] + ' 次'; } },
+    grid: { left: 48, right: 24, top: 20, bottom: 32 },
+    xAxis: { type: 'value', name: '月里程 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: '充电次数', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    series: [{ type: 'scatter', symbolSize: 14, data: csd }]
+  });
+}
+
+/* ============================================================
+   Tab 5: 质量与价值
+   ============================================================ */
+function renderValue() {
+  var totalMileage = 0, totalTasksDone = 0, totalTasksTotal = 0;
+  COMPANIES.forEach(function(n) {
+    totalMileage += MONTHLY[n].mileage; totalTasksDone += MONTHLY[n].tasks_done; totalTasksTotal += MONTHLY[n].tasks_total;
+  });
+  var laborSaved = Math.round(totalMileage / 5);
+  var carbonSaved = Math.round(totalMileage * 0.55);
+
+  var rows = COMPANIES.map(function(name, i) {
+    var m = MONTHLY[name];
+    return { name: name, idx: i, tasks_done: m.tasks_done, tasks_total: m.tasks_total, completion: m.completion, mileage: m.mileage };
+  }).sort(function(a, b) { return b.completion - a.completion; });
+
+  return '<div class="stat-cards">' +
+    '<div class="stat-card c0"><div class="stat-card-label">全集团月清扫里程</div><div class="stat-card-val">' + fmt(totalMileage) + '<span class="unit">km</span></div><div class="stat-card-sub up">▲ 8.2% vs 上月</div></div>' +
+    '<div class="stat-card c1"><div class="stat-card-label">替代人工作业估算</div><div class="stat-card-val">' + laborSaved + '<span class="unit">工时</span></div><div class="stat-card-sub">约 ' + Math.round(laborSaved / 176) + ' 人/月 等效作业量</div></div>' +
+    '<div class="stat-card c2"><div class="stat-card-label">碳减排估算</div><div class="stat-card-val">' + fmt(carbonSaved) + '<span class="unit">吨 CO₂</span></div><div class="stat-card-sub">基于电动车辆替代燃油环卫车</div></div>' +
+    '<div class="stat-card c3"><div class="stat-card-label">累计安全运行</div><div class="stat-card-val">187<span class="unit">天</span></div><div class="stat-card-sub">全集团无重大安全事故</div></div>' +
+  '</div>' +
+
+  '<div style="display:flex;gap:14px;margin-bottom:14px;">' +
+    '<div class="panel" style="flex:1.2"><div class="panel-head"><div class="panel-head-title">项目公司完成率排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_ranking\')">?</span><div class="panel-head-tag">当月完成率 · 含延期风险标记</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>已完成</th><th>总数</th><th>完成率</th><th>剩余</th><th>预计完成</th><th>风险</th></tr></thead><tbody>' +
+    rows.map(function(r) {
+      var remaining = r.tasks_total - r.tasks_done;
+      var dailyRate = r.tasks_done / 30;
+      var estDays = dailyRate > 0 ? Math.ceil(remaining / dailyRate) : 999;
+      var cCls = r.completion < 70 ? 'cell-bad' : r.completion < 80 ? 'cell-warn' : r.completion >= 95 ? 'cell-good' : '';
+      var risk = remaining === 0 ? tagHtml('已完成', 'good') : estDays > 15 ? tagHtml('延期风险', 'bad') : estDays > 7 ? tagHtml('需关注', 'warn') : tagHtml('正常', 'neutral');
+      return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[r.idx] + ';margin-right:8px"></span>' + r.name + '</td><td>' + r.tasks_done + '</td><td>' + r.tasks_total + '</td><td class="' + cCls + '">' + fmtPct(r.completion) + '</td><td>' + remaining + '</td><td>约 ' + estDays + ' 天</td><td>' + risk + '</td></tr>';
+    }).join('') +
+    '</tbody></table></div></div></div>' +
+    '<div class="panel" style="flex:0.8"><div class="panel-head"><div class="panel-head-title">月度无人化价值趋势</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_trend\')">?</span><div class="panel-head-tag">近 6 个月</div></div></div><div class="panel-body"><div id="valueTrendChart" class="chart-box h280"></div></div></div>' +
+  '</div>' +
+
+  '<div class="panel"><div class="panel-head"><div class="panel-head-title">各公司近 6 个月完成率趋势</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'value_mini\')">?</span><div class="panel-head-tag">小 multiples 视图</div></div></div><div class="panel-body"><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">' +
+    COMPANIES.map(function(name, i) {
+      return '<div style="text-align:center"><div style="font-size:11px;color:var(--text-sec);margin-bottom:6px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + COMPANY_COLORS[i] + ';margin-right:5px"></span>' + name + '</div><div id="valueMini_' + i + '" class="chart-box" style="height:140px"></div><div style="font-size:11px;color:var(--text-mute);margin-top:2px">当前 ' + fmtPct(MONTHLY[name].completion) + '</div></div>';
+    }).join('') +
+  '</div></div></div>';
+}
+
+function mountValue() {
+  var monthlyMileages = [0, 0, 0, 0, 0, 0];
+  COMPANIES.forEach(function(name) {
+    MONTHLY_TREND[name].mileage.forEach(function(v, i) { monthlyMileages[i] += v; });
+  });
+
+  initChart('valueTrendChart', {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis' },
+    legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, top: 0, right: 0, itemWidth: 10, itemHeight: 7 },
+    grid: { left: 48, right: 48, top: 28, bottom: 24 },
+    xAxis: { type: 'category', data: ['1月','2月','3月','4月','5月','6月'], axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: [
+      { type: 'value', name: '里程 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+      { type: 'value', name: '工时', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { show: false } }
+    ],
+    series: [
+      { name: '清扫里程 (km)', type: 'line', smooth: true, symbol: 'none', data: monthlyMileages, lineStyle: { width: 2, color: '#0EA5E9' }, areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#0EA5E933'},{offset:1,color:'transparent'}]) } },
+      { name: '替代人工 (工时)', type: 'bar', barWidth: 20, yAxisIndex: 1, data: monthlyMileages.map(function(v) { return Math.round(v / 5); }), itemStyle: { color: '#10B981', borderRadius: [4,4,0,0], opacity: 0.8 } }
+    ]
+  });
+
+  COMPANIES.forEach(function(name, i) {
+    var trend = MONTHLY_TREND[name];
+    initChart('valueMini_' + i, {
+      backgroundColor: 'transparent',
+      grid: { left: 0, right: 0, top: 4, bottom: 0 },
+      xAxis: { type: 'category', show: false, data: trend.months },
+      yAxis: { type: 'value', show: false, min: 0, max: 100 },
+      series: [baseLineOpt(trend.completion, COMPANY_COLORS[i])]
+    });
+  });
+}
+
+/* ============================================================
+   弹窗
+   ============================================================ */
+function closeModal() {
+  document.getElementById('modal').hidden = true;
+  document.getElementById('modalBody').innerHTML = '';
+}
+
+/* ============================================================
+   初始化 — 所有事件绑定放在 try-catch 外，确保独立注册
+   ============================================================ */
+(function init() {
+  // Tab 切换
+  document.getElementById('tabBar').addEventListener('click', function(e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    var tab = btn.dataset.tab;
+    if (!tab || tab === currentTab) return;
+    document.querySelectorAll('#tabBar button').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    switchTab(tab);
+  });
+
+  // 时间范围切换
+  document.getElementById('timePresets').addEventListener('click', function(e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#timePresets button').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.period;
+    switchTab(currentTab); // 用新时间窗口重新渲染
+  });
+
+  // 导出按钮
+  document.getElementById('btnExport').addEventListener('click', function() {
+    alert('导出功能：将下载当前视图的 PDF 报表\n（实际接入后端后实现）');
+  });
+
+  // 弹窗关闭
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target.id === 'modal') closeModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // 窗口 resize
+  window.addEventListener('resize', function() {
+    Object.keys(chartInstances).forEach(function(k) {
+      try { if (chartInstances[k]) chartInstances[k].resize(); } catch(e) {}
+    });
+  });
+
+  // 首次渲染
+  switchTab('overview');
+})();
+</script>
+</body>
+</html>
