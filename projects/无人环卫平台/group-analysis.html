@@ -986,6 +986,21 @@ function renderEnergy() {
   var totalCharges = allVehicles.reduce(function(s, v) { return s + Math.round(v.mileage / v.range * 30); }, 0);
   var riskyCount = allVehicles.filter(function(v) { return v.range < v.daily_avg * 1.2; }).length;
 
+  // 按车型拆分车辆
+  var sd15Vehicles = allVehicles.filter(function(v) { return v.model === 'SD15'; }).sort(function(a, b) { return a.range - b.range; });
+  var sd22cVehicles = allVehicles.filter(function(v) { return v.model === 'SD22C'; }).sort(function(a, b) { return a.range - b.range; });
+
+  function renderRangeTable(vehicles, modelName) {
+    return '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">续航能力匹配检测 · ' + modelName + '</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_range\')">?</span><div class="panel-head-tag">满电续航 vs 日均里程 · 自动标注风险</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>车辆</th><th>满电续航</th><th>日均里程</th><th>电量冗余</th></tr></thead><tbody>' +
+      vehicles.map(function(v) {
+        var red = v.range - v.daily_avg;
+        var rCls = red > 20 ? 'cell-good' : red > 10 ? '' : red > 0 ? 'cell-warn' : 'cell-bad';
+        var st = red > 20 ? tagHtml('充足', 'good') : red > 10 ? tagHtml('正常', 'neutral') : red > 0 ? tagHtml('紧张', 'warn') : tagHtml('不足', 'bad');
+        return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[v.companyIdx] + ';margin-right:8px"></span>' + v.company + '</td><td>' + v.id + '</td><td>' + fmt(v.range) + ' km</td><td>' + fmt(v.daily_avg) + ' km</td><td class="' + rCls + '">' + st + '</td></tr>';
+      }).join('') +
+    '</tbody></table></div></div></div>';
+  }
+
   return '<div class="stat-cards">' +
     '<div class="stat-card c0"><div class="stat-card-label">全集团车辆总数</div><div class="stat-card-val">' + allVehicles.length + '<span class="unit">辆</span></div><div class="stat-card-sub">SD15 ×' + allVehicles.filter(function(v){return v.model==='SD15';}).length + ' · SD22C ×' + allVehicles.filter(function(v){return v.model==='SD22C';}).length + '</div></div>' +
     '<div class="stat-card c1"><div class="stat-card-label">平均满电续航</div><div class="stat-card-val">' + fmt(avgRange) + '<span class="unit">km</span></div><div class="stat-card-sub">最长 ' + maxR.range + 'km · 最短 ' + minR.range + 'km</div></div>' +
@@ -994,20 +1009,18 @@ function renderEnergy() {
   '</div>' +
 
   '<div style="display:flex;gap:14px;margin-bottom:14px;">' +
-    '<div class="panel" style="flex:1.3"><div class="panel-head"><div class="panel-head-title">续航能力匹配检测</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_range\')">?</span><div class="panel-head-tag">满电续航 vs 日均里程 · 自动标注风险</div></div></div><div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr><th>公司</th><th>车辆</th><th>车型</th><th>满电续航</th><th>日均里程</th><th>电量冗余</th></tr></thead><tbody>' +
-    sortedByRange.map(function(v) {
-      var red = v.range - v.daily_avg;
-      var rCls = red > 20 ? 'cell-good' : red > 10 ? '' : red > 0 ? 'cell-warn' : 'cell-bad';
-      var st = red > 20 ? tagHtml('充足', 'good') : red > 10 ? tagHtml('正常', 'neutral') : red > 0 ? tagHtml('紧张', 'warn') : tagHtml('不足', 'bad');
-      return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + COMPANY_COLORS[v.companyIdx] + ';margin-right:8px"></span>' + v.company + '</td><td>' + v.id + '</td><td>' + v.model + '</td><td>' + fmt(v.range) + ' km</td><td>' + fmt(v.daily_avg) + ' km</td><td class="' + rCls + '">' + st + '</td></tr>';
-    }).join('') +
-    '</tbody></table></div></div></div>' +
-    '<div class="panel" style="flex:0.7"><div class="panel-head"><div class="panel-head-title">续航适配分析</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_scatter\')">?</span><div class="panel-head-tag">●绿=健康 ●黄=注意 ●红=警告</div></div></div><div class="panel-body"><div id="energyScatter" class="chart-box h300"></div></div></div>' +
+    renderRangeTable(sd15Vehicles, 'SD15') +
+    renderRangeTable(sd22cVehicles, 'SD22C') +
+  '</div>' +
+
+  '<div style="display:flex;gap:14px;margin-bottom:14px;">' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">续航适配分析</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_scatter\')">?</span><div class="panel-head-tag">●绿=健康 ●黄=注意 ●红=警告</div></div></div><div class="panel-body"><div id="energyScatter" class="chart-box h280"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">充电效率诊断（30%-80% 快充段）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_efficiency\')">?</span><div class="panel-head-tag">实际 vs 理论充电时长</div></div></div><div class="panel-body"><div id="chargeEfficiencyChart" class="chart-box h280"></div></div></div>' +
   '</div>' +
 
   '<div style="display:flex;gap:14px;">' +
-    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">充电效率诊断（30%-80% 快充段）</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_efficiency\')">?</span><div class="panel-head-tag">实际 vs 理论充电时长</div></div></div><div class="panel-body"><div id="chargeEfficiencyChart" class="chart-box h240"></div></div></div>' +
-    '<div class="panel" style="flex:0.7"><div class="panel-head"><div class="panel-head-title">充电频次异常检测</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_charge_scatter\')">?</span><div class="panel-head-tag">偏离拟合线 = 充电异常频繁</div></div></div><div class="panel-body"><div id="chargeScatterChart" class="chart-box h240"></div></div></div>' +
+    '<div class="panel" style="flex:1"><div class="panel-head"><div class="panel-head-title">充电频次异常检测</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'energy_charge_scatter\')">?</span><div class="panel-head-tag">偏离拟合线 = 充电异常频繁</div></div></div><div class="panel-body"><div id="chargeScatterChart" class="chart-box h240"></div></div></div>' +
+    '<div style="flex:1"></div>' +
   '</div>';
 }
 
