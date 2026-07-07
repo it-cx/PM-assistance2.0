@@ -911,7 +911,7 @@
       <span class="panel-cue">详情 ↗</span>
       <div class="pill-eyebrow">FLEET · 在线</div>
       <div class="fleet-pill-main">
-        <div class="fleet-pill-big" id="fleetOnline">0<span class="total">/14</span></div>
+        <div class="fleet-pill-big" id="fleetOnline">0<span class="total">/5</span></div>
         <div>
           <div class="fleet-pill-pct"><span>在线率</span><b id="fleetPct">0%</b></div>
           <div class="fleet-pill-bar"><div class="fleet-pill-bar-fill" id="fleetBar" style="width:0%"></div></div>
@@ -990,21 +990,21 @@
         <div class="resource-track">
           <div class="resource-meta">
             <span class="name"><i style="background:var(--lime);box-shadow:0 0 4px var(--lime)"></i>充电</span>
-            <span class="count"><b id="rcCharge">23</b> 次 · 累计 <b id="rkCharge">0</b> kWh</span>
+            <span class="count"><b id="rcCharge">8</b> 次 · 累计 <b id="rkCharge">0</b> kWh</span>
           </div>
           <div class="resource-timeline" id="tlCharge"></div>
         </div>
         <div class="resource-track">
           <div class="resource-meta">
             <span class="name"><i style="background:#4FC3F7;box-shadow:0 0 4px #4FC3F7"></i>加水</span>
-            <span class="count"><b id="rcWater">31</b> 次 · 累计 <b id="rkWater">0</b> L</span>
+            <span class="count"><b id="rcWater">11</b> 次 · 累计 <b id="rkWater">0</b> L</span>
           </div>
           <div class="resource-timeline" id="tlWater"></div>
         </div>
         <div class="resource-track">
           <div class="resource-meta">
             <span class="name"><i style="background:var(--violet);box-shadow:0 0 4px var(--violet)"></i>倒垃圾</span>
-            <span class="count"><b id="rcTrash">14</b> 次 · 容量恢复 <b id="rkTrash">0</b><span id="ruTrash">%</span></span>
+            <span class="count"><b id="rcTrash">5</b> 次 · 容量恢复 <b id="rkTrash">0</b><span id="ruTrash">%</span></span>
           </div>
           <div class="resource-timeline" id="tlTrash"></div>
         </div>
@@ -1088,22 +1088,22 @@ const DATASET = {
     periodLabel: '今日 · 2026-06-16 · 截至 14:32',
     currentTime: '14:32',
     hero: {
-      sweepDist: 76.1, sweepTime: 5.4, avgSpeed: 5.2,
+      sweepDist: 27.5, sweepTime: 2.4, avgSpeed: 5.2,
       driveRatio: '1.48 : 1', workShare: 74,
-      vsYesterdayPct: '+13%',
-      vsYesterdayAbs: '+9.0 km',
+      vsYesterdayPct: '+11%',
+      vsYesterdayAbs: '+2.8 km',
       vsYesterdayTime: '14:32',
       vsYesterdayLabel: 'vs 昨日同时段'
     },
-    efficiency: { kwhPer100km: 28.0, totalPower: 612.4, driveShare: 36.9, sd15: 22.5, sd22c: 33.2, baselineSd15: 22, baselineSd22c: 30, baselineTotal: 26 },
-    fleet: { online: 13, offline: 1, total: 14 },
-    safety: { alert: 7, takeover: 3, sd15: { alert: 3, takeover: 1 }, sd22c: { alert: 4, takeover: 2 } },
+    efficiency: { kwhPer100km: 28.0, totalPower: 221.5, driveShare: 36.9, sd15: 22.5, sd22c: 33.2, baselineSd15: 22, baselineSd22c: 30, baselineTotal: 26 },
+    fleet: { online: 4, offline: 1, total: 5 },
+    safety: { alert: 3, takeover: 2, sd15: { alert: 1, takeover: 1 }, sd22c: { alert: 2, takeover: 1 } },
     trend: {
       hours: ['00','02','04','06','08','10','12','14','16','18','20','22'],
-      drive: [3.2, 2.8, 4.4, 12.1, 18.6, 22.4, 19.8, 16.2, null, null, null, null],
-      sweep: [2.1, 1.8, 3.2, 9.8, 14.2, 17.5, 15.1, 12.4, null, null, null, null],
-      yesterdayDrive: [2.8, 2.4, 3.8, 10.5, 16.2, 19.8, 17.5, 14.2, 15.5, 12.8, 7.2, 2.4],
-      yesterdaySweep: [1.8, 1.6, 2.8, 8.2, 12.8, 15.5, 13.4, 11.0, 12.8, 10.5, 5.8, 1.2]
+      drive: [1.2, 1.0, 1.6, 4.5, 7.0, 8.4, 7.4, 6.1, null, null, null, null],
+      sweep: [0.8, 0.7, 1.2, 3.7, 5.3, 6.6, 5.7, 4.7, null, null, null, null],
+      yesterdayDrive: [1.0, 0.9, 1.4, 4.0, 6.1, 7.4, 6.6, 5.3, 5.8, 4.8, 2.7, 0.9],
+      yesterdaySweep: [0.7, 0.6, 1.1, 3.1, 4.8, 5.8, 5.0, 4.1, 4.8, 3.9, 2.2, 0.5]
     },
     tasks: {
       rate: 87.5, done: 248, total: 283, deltaYesterday: 12, projectCount: 5,
@@ -1116,25 +1116,25 @@ const DATASET = {
       ]
     },
     resources: {
-      charge: { count: 23, total: 1842, marks: [8,15,22,29,36,42,48,55,61,67,72,78,83,88,92,96,12,18,25,33,45,58,71] },
-      water:  { count: 31, total: 2148, marks: [10,18,26,33,40,46,52,58,64,70,76,82,87,92,14,22,30,38,44,50,56,63,69,75,81,86,20,35,55,80,90] },
-      trash:  { count: 14, total: 88, marks: [12,28,42,55,68,78,86,18,38,58,72,82,32,62] }
+      charge: { count: 8, total: 642, marks: [8,15,22,29,36,42,48,55] },
+      water:  { count: 11, total: 768, marks: [10,18,26,33,40,46,52,58,64,70,76] },
+      trash:  { count: 5, total: 32, marks: [12,28,55,68,86] }
     },
     detail: {
       efficiency: {
         driveShareSD15: 34.2,
         driveShareSD22C: 39.5,
         compositionSD15: [
-          { name: '驱动能耗', value: 98, color: '#00E5FF' },
-          { name: '清扫能耗', value: 82, color: '#FFB546' },
-          { name: '辅助系统', value: 38, color: '#2EE6C5' },
-          { name: '待机能耗', value: 32, color: '#8B5CF6' }
+          { name: '驱动能耗', value: 36, color: '#00E5FF' },
+          { name: '清扫能耗', value: 30, color: '#FFB546' },
+          { name: '辅助系统', value: 14, color: '#2EE6C5' },
+          { name: '待机能耗', value: 12, color: '#8B5CF6' }
         ],
         compositionSD22C: [
-          { name: '驱动能耗', value: 147, color: '#00E5FF' },
-          { name: '清扫能耗', value: 98, color: '#FFB546' },
-          { name: '辅助系统', value: 59, color: '#2EE6C5' },
-          { name: '待机能耗', value: 58, color: '#8B5CF6' }
+          { name: '驱动能耗', value: 52, color: '#00E5FF' },
+          { name: '清扫能耗', value: 35, color: '#FFB546' },
+          { name: '辅助系统', value: 21, color: '#2EE6C5' },
+          { name: '待机能耗', value: 21, color: '#8B5CF6' }
         ],
         trend7d: {
           days: ['6/10','6/11','6/12','6/13','6/14','6/15','6/16'],
@@ -1143,99 +1143,81 @@ const DATASET = {
           total: [27.5, 27.0, 26.8, 27.6, 27.9, 27.2, 28.0]
         },
         composition: [
-          { name: '驱动能耗', value: 245, color: '#00E5FF' },
-          { name: '清扫能耗', value: 180, color: '#FFB546' },
-          { name: '辅助系统', value: 97,  color: '#2EE6C5' },
-          { name: '待机能耗', value: 90,  color: '#8B5CF6' }
+          { name: '驱动能耗', value: 88, color: '#00E5FF' },
+          { name: '清扫能耗', value: 65, color: '#FFB546' },
+          { name: '辅助系统', value: 35, color: '#2EE6C5' },
+          { name: '待机能耗', value: 33, color: '#8B5CF6' }
         ],
         vehicles: [
           { id: 'VHC-01', model: 'SD15',  kwh100: 19.5, total: 32.8 },
           { id: 'VHC-02', model: 'SD15',  kwh100: 21.0, total: 36.2 },
           { id: 'VHC-03', model: 'SD15',  kwh100: 22.3, total: 41.5 },
-          { id: 'VHC-04', model: 'SD15',  kwh100: 20.8, total: 38.4 },
-          { id: 'VHC-05', model: 'SD15',  kwh100: 23.5, total: 43.2 },
-          { id: 'VHC-06', model: 'SD15',  kwh100: 24.1, total: 42.6 },
-          { id: 'VHC-07', model: 'SD15',  kwh100: 22.0, total: 39.8 },
-          { id: 'VHC-08', model: 'SD15',  kwh100: 26.5, total: 35.5 },
           { id: 'VHC-09', model: 'SD22C', kwh100: 32.5, total: 58.2 },
-          { id: 'VHC-10', model: 'SD22C', kwh100: 31.8, total: 55.4 },
-          { id: 'VHC-11', model: 'SD22C', kwh100: 34.2, total: 62.8 },
-          { id: 'VHC-12', model: 'SD22C', kwh100: 30.5, total: 49.6 },
-          { id: 'VHC-13', model: 'SD22C', kwh100: 35.8, total: 41.2 },
-          { id: 'VHC-14', model: 'SD22C', kwh100: 0,    total: 0 }
+          { id: 'VHC-10', model: 'SD22C', kwh100: 31.8, total: 55.4 }
         ]
       },
       fleet: {
-        stats: { working: 9, charging: 2, idle: 2, offline: 1 },
+        stats: { working: 3, charging: 1, idle: 0, offline: 1 },
         vehicles: [
           { id: 'VHC-01', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 78, loc: '滨江路 K5+200',   todayKm: 5.8 },
           { id: 'VHC-02', model: 'SD15',  status: 'work',    task: '浦东主干道清扫',   soc: 62, loc: '杨高路 K12+050',  todayKm: 6.2 },
-          { id: 'VHC-03', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 54, loc: '滨江路 K8+100',   todayKm: 5.1 },
-          { id: 'VHC-04', model: 'SD15',  status: 'charge',  task: '—',               soc: 18, loc: '充电桩 #C-07',     todayKm: 4.8 },
-          { id: 'VHC-05', model: 'SD15',  status: 'work',    task: '徐汇商圈夜间保洁', soc: 71, loc: '徐家汇路 K3+050',  todayKm: 5.5 },
-          { id: 'VHC-06', model: 'SD15',  status: 'work',    task: '静安寺周边网格',   soc: 88, loc: '南京西路 K2+400',  todayKm: 4.4 },
-          { id: 'VHC-07', model: 'SD15',  status: 'idle',    task: '待命',            soc: 95, loc: '静安站点',          todayKm: 3.6 },
-          { id: 'VHC-08', model: 'SD15',  status: 'work',    task: '长宁商务区巡扫',   soc: 42, loc: '中山公园 K1+200',  todayKm: 6.0 },
-          { id: 'VHC-09', model: 'SD22C', status: 'work',    task: '黄埔滨江改造段',   soc: 65, loc: '滨江路 K2+800',   todayKm: 7.2 },
-          { id: 'VHC-10', model: 'SD22C', status: 'work',    task: '浦东主干道清扫',   soc: 48, loc: '杨高路 K8+500',   todayKm: 8.1 },
-          { id: 'VHC-11', model: 'SD22C', status: 'work',    task: '徐汇商圈夜间保洁', soc: 73, loc: '徐家汇路 K6+200',  todayKm: 6.8 },
-          { id: 'VHC-12', model: 'SD22C', status: 'charge',  task: '—',               soc: 32, loc: '充电桩 #C-03',     todayKm: 5.4 },
-          { id: 'VHC-13', model: 'SD22C', status: 'idle',    task: '待命',            soc: 90, loc: '徐汇站点',          todayKm: 4.2 },
-          { id: 'VHC-14', model: 'SD22C', status: 'offline', task: '维修中',          soc: 0,  loc: '维修车间',          todayKm: 0 }
+          { id: 'VHC-03', model: 'SD15',  status: 'charge',  task: '—',               soc: 18, loc: '充电桩 #C-07',     todayKm: 5.1 },
+          { id: 'VHC-09', model: 'SD22C', status: 'work',    task: '徐汇商圈夜间保洁', soc: 65, loc: '徐家汇路 K3+050',  todayKm: 7.2 },
+          { id: 'VHC-10', model: 'SD22C', status: 'offline', task: '维修中',          soc: 0,  loc: '维修车间',          todayKm: 0 }
         ]
       },
       safety: {
-        sd15: { alert: 3, takeover: 1 },
-        sd22c: { alert: 4, takeover: 2 },
+        sd15: { alert: 1, takeover: 1 },
+        sd22c: { alert: 2, takeover: 1 },
         severity: [
-          { name: '高', value: 2, color: '#FF5470' },
-          { name: '中', value: 5, color: '#FFB546' },
+          { name: '高', value: 1, color: '#FF5470' },
+          { name: '中', value: 4, color: '#FFB546' },
           { name: '低', value: 3, color: '#2EE6C5' }
         ],
         events: [
           { time: '14:32:08', vehicle: 'VHC-09', model: 'SD22C', type: '接管', sev: '高', desc: '路径临时封闭 · 人工接管',     status: '处理中' },
-          { time: '14:18:42', vehicle: 'VHC-04', model: 'SD15',  type: '告警', sev: '中', desc: '激光雷达点云异常 · 自动降级', status: '已处理' },
+          { time: '14:18:42', vehicle: 'VHC-01', model: 'SD15',  type: '告警', sev: '中', desc: '激光雷达点云异常 · 自动降级', status: '已处理' },
           { time: '13:54:11', vehicle: 'VHC-09', model: 'SD22C', type: '事件', sev: '低', desc: '垃圾倾倒完成 · 容量 100%→12%',status: '已完成' },
-          { time: '13:22:36', vehicle: 'VHC-12', model: 'SD22C', type: '告警', sev: '中', desc: 'SOC 低于阈值 · 已返桩充电',   status: '已处理' },
-          { time: '12:48:09', vehicle: 'VHC-04', model: 'SD15',  type: '告警', sev: '高', desc: '电池温度 48°C · 风扇提速',     status: '处理中' },
+          { time: '13:22:36', vehicle: 'VHC-10', model: 'SD22C', type: '告警', sev: '中', desc: 'SOC 低于阈值 · 已返桩充电',   status: '已处理' },
+          { time: '12:48:09', vehicle: 'VHC-02', model: 'SD15',  type: '告警', sev: '高', desc: '电池温度 48°C · 风扇提速',     status: '处理中' },
           { time: '12:15:53', vehicle: 'VHC-09', model: 'SD22C', type: '事件', sev: '低', desc: '加水补给完成 · 120 L',         status: '已完成' },
-          { time: '11:42:18', vehicle: 'VHC-12', model: 'SD22C', type: '接管', sev: '高', desc: '行人横穿 · 紧急接管',         status: '已处理' },
+          { time: '11:42:18', vehicle: 'VHC-03', model: 'SD15',  type: '接管', sev: '高', desc: '行人横穿 · 紧急接管',         status: '已处理' },
           { time: '11:08:44', vehicle: 'VHC-09', model: 'SD22C', type: '事件', sev: '低', desc: '充电完成 · SOC 19%→95%',       status: '已完成' },
-          { time: '10:36:22', vehicle: 'VHC-04', model: 'SD15',  type: '告警', sev: '中', desc: '5G RSSI -98 dBm · 通信抖动',   status: '已处理' },
-          { time: '09:52:17', vehicle: 'VHC-11', model: 'SD22C', type: '接管', sev: '中', desc: '施工区域 · 人工接管绕行',     status: '已处理' }
+          { time: '10:36:22', vehicle: 'VHC-01', model: 'SD15',  type: '告警', sev: '中', desc: '5G RSSI -98 dBm · 通信抖动',   status: '已处理' },
+          { time: '09:52:17', vehicle: 'VHC-10', model: 'SD22C', type: '接管', sev: '中', desc: '施工区域 · 人工接管绕行',     status: '已处理' }
         ]
       },
       resources: {
         charge: {
-          count: 23, total: 1842, avgInterval: 47, avgDuration: 28,
-          hourly: [0,0,0,0,0,0,1,2,4,3,2,2,3,2,1,1,1,0,0,0,0,0,0,0],
+          count: 8, total: 642, avgInterval: 47, avgDuration: 28,
+          hourly: [0,0,0,0,0,0,0,1,2,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
           records: [
-            { time: '13:22', vehicle: 'VHC-12', station: 'C-07', amount: 62, duration: 32 },
+            { time: '13:22', vehicle: 'VHC-03', station: 'C-07', amount: 62, duration: 32 },
             { time: '11:08', vehicle: 'VHC-09', station: 'C-03', amount: 76, duration: 41 },
-            { time: '09:15', vehicle: 'VHC-04', station: 'C-07', amount: 58, duration: 28 },
-            { time: '07:42', vehicle: 'VHC-08', station: 'C-02', amount: 65, duration: 35 },
-            { time: '06:20', vehicle: 'VHC-11', station: 'C-05', amount: 70, duration: 38 }
+            { time: '09:15', vehicle: 'VHC-01', station: 'C-07', amount: 58, duration: 28 },
+            { time: '07:42', vehicle: 'VHC-02', station: 'C-02', amount: 65, duration: 35 },
+            { time: '06:20', vehicle: 'VHC-10', station: 'C-05', amount: 70, duration: 38 }
           ]
         },
         water: {
-          count: 31, total: 2148, avgInterval: 32, avgDuration: 12,
-          hourly: [0,0,0,0,0,1,2,3,4,3,3,2,3,2,2,2,1,1,0,0,0,0,0,0],
+          count: 11, total: 768, avgInterval: 32, avgDuration: 12,
+          hourly: [0,0,0,0,0,0,1,1,2,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0],
           records: [
             { time: '12:15', vehicle: 'VHC-09', station: 'W-03', amount: 120, duration: 14 },
             { time: '10:48', vehicle: 'VHC-02', station: 'W-01', amount: 95,  duration: 11 },
             { time: '09:20', vehicle: 'VHC-10', station: 'W-04', amount: 110, duration: 13 },
-            { time: '07:55', vehicle: 'VHC-06', station: 'W-02', amount: 88,  duration: 10 },
-            { time: '06:30', vehicle: 'VHC-13', station: 'W-05', amount: 105, duration: 12 }
+            { time: '07:55', vehicle: 'VHC-01', station: 'W-02', amount: 88,  duration: 10 },
+            { time: '06:30', vehicle: 'VHC-03', station: 'W-05', amount: 105, duration: 12 }
           ]
         },
         trash: {
-          count: 14, total: 88, avgInterval: 95, avgDuration: 18,
-          hourly: [0,0,0,0,0,0,0,1,1,1,2,1,1,2,1,1,1,1,0,0,0,0,0,0],
+          count: 5, total: 32, avgInterval: 95, avgDuration: 18,
+          hourly: [0,0,0,0,0,0,0,0,1,0,1,0,1,1,0,0,1,0,0,0,0,0,0,0],
           records: [
             { time: '13:54', vehicle: 'VHC-09', station: 'T-02', amount: 8.5, duration: 22 },
             { time: '11:30', vehicle: 'VHC-03', station: 'T-01', amount: 7.2, duration: 18 },
-            { time: '09:48', vehicle: 'VHC-11', station: 'T-03', amount: 6.8, duration: 16 },
-            { time: '07:20', vehicle: 'VHC-08', station: 'T-02', amount: 9.0, duration: 24 }
+            { time: '09:48', vehicle: 'VHC-10', station: 'T-03', amount: 6.8, duration: 16 },
+            { time: '07:20', vehicle: 'VHC-02', station: 'T-02', amount: 9.0, duration: 24 }
           ]
         }
       },
@@ -1265,30 +1247,30 @@ const DATASET = {
           {
             name: '徐汇商圈夜间保洁', deadline: '2026-07-20',
             done: 35, total: 47, color: '#FFB546',
-            vehicles: ['VHC-05', 'VHC-11'],
+            vehicles: ['VHC-09', 'VHC-10'],
             subtasks: [
-              { name: '徐汇商圈夜间保洁·A班', vehicle: 'VHC-05', status: '进行', progress: 64 },
-              { name: '徐汇商圈夜间保洁·B班', vehicle: 'VHC-11', status: '进行', progress: 52 },
-              { name: '徐汇商圈夜间保洁·C班', vehicle: 'VHC-05', status: '待开', progress: 0 }
+              { name: '徐汇商圈夜间保洁·A班', vehicle: 'VHC-09', status: '进行', progress: 64 },
+              { name: '徐汇商圈夜间保洁·B班', vehicle: 'VHC-10', status: '进行', progress: 52 },
+              { name: '徐汇商圈夜间保洁·C班', vehicle: 'VHC-09', status: '待开', progress: 0 }
             ]
           },
           {
             name: '静安寺周边网格', deadline: '2026-06-22',
             done: 32, total: 32, color: '#B6FF3D',
-            vehicles: ['VHC-06'],
+            vehicles: ['VHC-02'],
             subtasks: [
-              { name: '静安寺周边网格·上午班', vehicle: 'VHC-06', status: '完成', progress: 100 },
-              { name: '静安寺周边网格·下午班', vehicle: 'VHC-06', status: '完成', progress: 100 }
+              { name: '静安寺周边网格·上午班', vehicle: 'VHC-02', status: '完成', progress: 100 },
+              { name: '静安寺周边网格·下午班', vehicle: 'VHC-02', status: '完成', progress: 100 }
             ]
           },
           {
             name: '长宁商务区巡扫', deadline: '2026-07-10',
             done: 28, total: 45, color: '#FF5470',
-            vehicles: ['VHC-08'],
+            vehicles: ['VHC-01'],
             subtasks: [
-              { name: '长宁商务区巡扫·上午班', vehicle: 'VHC-08', status: '进行', progress: 68 },
-              { name: '长宁商务区巡扫·下午班', vehicle: 'VHC-08', status: '进行', progress: 42 },
-              { name: '长宁商务区巡扫·夜班',   vehicle: 'VHC-08', status: '待开', progress: 0 }
+              { name: '长宁商务区巡扫·上午班', vehicle: 'VHC-01', status: '进行', progress: 68 },
+              { name: '长宁商务区巡扫·下午班', vehicle: 'VHC-01', status: '进行', progress: 42 },
+              { name: '长宁商务区巡扫·夜班',   vehicle: 'VHC-01', status: '待开', progress: 0 }
             ]
           }
         ]
@@ -1298,52 +1280,52 @@ const DATASET = {
   total: {
     periodLabel: '累计 · 全生命周期',
     hero: {
-      sweepDist: 32408, sweepTime: 2286, avgSpeed: 5.4,
+      sweepDist: 11574, sweepTime: 816, avgSpeed: 5.4,
       driveRatio: '1.49 : 1', workShare: 74,
       vsYesterdayPct: '+0.3%',
-      vsYesterdayAbs: '+96.4 km',
+      vsYesterdayAbs: '+34.4 km',
       vsYesterdayTime: null,
       vsYesterdayLabel: '近一日增量'
     },
-    efficiency: { kwhPer100km: 25.5, totalPower: 286540, driveShare: 36.9, sd15: 19.5, sd22c: 31.5, baselineSd15: 22, baselineSd22c: 30, baselineTotal: 26 },
-    fleet: { online: 13, offline: 1, total: 14 },
-    safety: { alert: 1284, takeover: 426, sd15: { alert: 580, takeover: 192 }, sd22c: { alert: 704, takeover: 234 } },
+    efficiency: { kwhPer100km: 25.5, totalPower: 102340, driveShare: 36.9, sd15: 19.5, sd22c: 31.5, baselineSd15: 22, baselineSd22c: 30, baselineTotal: 26 },
+    fleet: { online: 4, offline: 1, total: 5 },
+    safety: { alert: 460, takeover: 152, sd15: { alert: 208, takeover: 68 }, sd22c: { alert: 252, takeover: 84 } },
     trend: {
       hours: ['1月','2月','3月','4月','5月','6月'],
-      drive: [6420, 7180, 8024, 7860, 9120, 9612],
-      sweep: [4280, 5060, 5840, 5520, 6480, 5228],
+      drive: [2292, 2564, 2866, 2807, 3257, 3433],
+      sweep: [1528, 1807, 2086, 1971, 2314, 1867],
       yesterdaySweep: null
     },
     tasks: {
-      rate: 92.8, done: 8421, total: 9074, deltaYesterday: 96, projectCount: 5,
+      rate: 92.8, done: 3008, total: 3241, deltaYesterday: 34, projectCount: 5,
       projects: [
-        { name: '黄埔滨江改造段',   done: 1842, total: 1900, color: '#00E5FF' },
-        { name: '浦东主干道清扫',   done: 2128, total: 2200, color: '#B6FF3D' },
-        { name: '徐汇商圈夜间保洁', done: 1564, total: 1740, color: '#FFB546' },
-        { name: '静安寺周边网格',   done: 1486, total: 1486, color: '#B6FF3D' },
-        { name: '长宁商务区巡扫',   done: 1401, total: 1748, color: '#FF5470' }
+        { name: '黄埔滨江改造段',   done: 658, total: 679, color: '#00E5FF' },
+        { name: '浦东主干道清扫',   done: 760, total: 786, color: '#B6FF3D' },
+        { name: '徐汇商圈夜间保洁', done: 559, total: 621, color: '#FFB546' },
+        { name: '静安寺周边网格',   done: 531, total: 531, color: '#B6FF3D' },
+        { name: '长宁商务区巡扫',   done: 500, total: 624, color: '#FF5470' }
       ]
     },
     resources: {
-      charge: { count: 8421, total: 245620, marks: [] },
-      water:  { count: 11248, total: 82460, marks: [] },
-      trash:  { count: 5186, total: 462, marks: [] }
+      charge: { count: 3008, total: 87720, marks: [] },
+      water:  { count: 4017, total: 29450, marks: [] },
+      trash:  { count: 1852, total: 165, marks: [] }
     },
     detail: {
       efficiency: {
         driveShareSD15: 33.8,
         driveShareSD22C: 40.2,
         compositionSD15: [
-          { name: '驱动能耗', value: 48200, color: '#00E5FF' },
-          { name: '清扫能耗', value: 38600, color: '#FFB546' },
-          { name: '辅助系统', value: 19500, color: '#2EE6C5' },
-          { name: '待机能耗', value: 16800, color: '#8B5CF6' }
+          { name: '驱动能耗', value: 17200, color: '#00E5FF' },
+          { name: '清扫能耗', value: 13780, color: '#FFB546' },
+          { name: '辅助系统', value: 6960, color: '#2EE6C5' },
+          { name: '待机能耗', value: 6000, color: '#8B5CF6' }
         ],
         compositionSD22C: [
-          { name: '驱动能耗', value: 67600, color: '#00E5FF' },
-          { name: '清扫能耗', value: 46900, color: '#FFB546' },
-          { name: '辅助系统', value: 29100, color: '#2EE6C5' },
-          { name: '待机能耗', value: 19840, color: '#8B5CF6' }
+          { name: '驱动能耗', value: 24140, color: '#00E5FF' },
+          { name: '清扫能耗', value: 16750, color: '#FFB546' },
+          { name: '辅助系统', value: 10390, color: '#2EE6C5' },
+          { name: '待机能耗', value: 7090, color: '#8B5CF6' }
         ],
         trend7d: {
           days: ['5月','6月初','6月上','6月中','6月中','6月下','当前'],
@@ -1352,95 +1334,77 @@ const DATASET = {
           total: [26.0, 26.4, 25.5, 25.8, 25.2, 24.6, 25.5]
         },
         composition: [
-          { name: '驱动能耗', value: 115800, color: '#00E5FF' },
-          { name: '清扫能耗', value: 85500,  color: '#FFB546' },
-          { name: '辅助系统', value: 48600,  color: '#2EE6C5' },
-          { name: '待机能耗', value: 36640,  color: '#8B5CF6' }
+          { name: '驱动能耗', value: 41340, color: '#00E5FF' },
+          { name: '清扫能耗', value: 30530,  color: '#FFB546' },
+          { name: '辅助系统', value: 17350,  color: '#2EE6C5' },
+          { name: '待机能耗', value: 13090,  color: '#8B5CF6' }
         ],
         vehicles: [
-          { id: 'VHC-01', model: 'SD15',  kwh100: 20.2, total: 15428 },
-          { id: 'VHC-02', model: 'SD15',  kwh100: 19.8, total: 14962 },
-          { id: 'VHC-03', model: 'SD15',  kwh100: 21.5, total: 16850 },
-          { id: 'VHC-04', model: 'SD15',  kwh100: 20.4, total: 15720 },
-          { id: 'VHC-05', model: 'SD15',  kwh100: 19.0, total: 14280 },
-          { id: 'VHC-06', model: 'SD15',  kwh100: 18.8, total: 13950 },
-          { id: 'VHC-07', model: 'SD15',  kwh100: 19.5, total: 14620 },
-          { id: 'VHC-08', model: 'SD15',  kwh100: 22.1, total: 17480 },
-          { id: 'VHC-09', model: 'SD22C', kwh100: 31.2, total: 23680 },
-          { id: 'VHC-10', model: 'SD22C', kwh100: 30.8, total: 22940 },
-          { id: 'VHC-11', model: 'SD22C', kwh100: 32.5, total: 24850 },
-          { id: 'VHC-12', model: 'SD22C', kwh100: 29.5, total: 21820 },
-          { id: 'VHC-13', model: 'SD22C', kwh100: 33.8, total: 18420 },
-          { id: 'VHC-14', model: 'SD22C', kwh100: 31.0, total: 16580 }
+          { id: 'VHC-01', model: 'SD15',  kwh100: 20.2, total: 5510 },
+          { id: 'VHC-02', model: 'SD15',  kwh100: 19.8, total: 5344 },
+          { id: 'VHC-03', model: 'SD15',  kwh100: 21.5, total: 6018 },
+          { id: 'VHC-09', model: 'SD22C', kwh100: 31.2, total: 8457 },
+          { id: 'VHC-10', model: 'SD22C', kwh100: 30.8, total: 8193 }
         ]
       },
       fleet: {
-        stats: { working: 9, charging: 2, idle: 2, offline: 1 },
+        stats: { working: 3, charging: 1, idle: 0, offline: 1 },
         vehicles: [
-          { id: 'VHC-01', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 78, loc: '滨江路 K5+200',   todayKm: 2218 },
-          { id: 'VHC-02', model: 'SD15',  status: 'work',    task: '浦东主干道清扫',   soc: 62, loc: '杨高路 K12+050',  todayKm: 2410 },
-          { id: 'VHC-03', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 54, loc: '滨江路 K8+100',   todayKm: 2380 },
-          { id: 'VHC-04', model: 'SD15',  status: 'charge',  task: '—',               soc: 18, loc: '充电桩 #C-07',     todayKm: 2280 },
-          { id: 'VHC-05', model: 'SD15',  status: 'work',    task: '徐汇商圈夜间保洁', soc: 71, loc: '徐家汇路 K3+050',  todayKm: 2090 },
-          { id: 'VHC-06', model: 'SD15',  status: 'work',    task: '静安寺周边网格',   soc: 88, loc: '南京西路 K2+400',  todayKm: 2185 },
-          { id: 'VHC-07', model: 'SD15',  status: 'idle',    task: '待命',            soc: 95, loc: '静安站点',          todayKm: 1980 },
-          { id: 'VHC-08', model: 'SD15',  status: 'work',    task: '长宁商务区巡扫',   soc: 42, loc: '中山公园 K1+200',  todayKm: 2480 },
-          { id: 'VHC-09', model: 'SD22C', status: 'work',    task: '黄埔滨江改造段',   soc: 65, loc: '滨江路 K2+800',   todayKm: 2820 },
-          { id: 'VHC-10', model: 'SD22C', status: 'work',    task: '浦东主干道清扫',   soc: 48, loc: '杨高路 K8+500',   todayKm: 2980 },
-          { id: 'VHC-11', model: 'SD22C', status: 'work',    task: '徐汇商圈夜间保洁', soc: 73, loc: '徐家汇路 K6+200',  todayKm: 2640 },
-          { id: 'VHC-12', model: 'SD22C', status: 'charge',  task: '—',               soc: 32, loc: '充电桩 #C-03',     todayKm: 2520 },
-          { id: 'VHC-13', model: 'SD22C', status: 'idle',    task: '待命',            soc: 90, loc: '徐汇站点',          todayKm: 2280 },
-          { id: 'VHC-14', model: 'SD22C', status: 'offline', task: '维修中',          soc: 0,  loc: '维修车间',          todayKm: 1860 }
+          { id: 'VHC-01', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 78, loc: '滨江路 K5+200',   todayKm: 792 },
+          { id: 'VHC-02', model: 'SD15',  status: 'work',    task: '浦东主干道清扫',   soc: 62, loc: '杨高路 K12+050',  todayKm: 861 },
+          { id: 'VHC-03', model: 'SD15',  status: 'charge',  task: '—',               soc: 18, loc: '充电桩 #C-07',     todayKm: 850 },
+          { id: 'VHC-09', model: 'SD22C', status: 'work',    task: '徐汇商圈夜间保洁', soc: 65, loc: '徐家汇路 K3+050',  todayKm: 1007 },
+          { id: 'VHC-10', model: 'SD22C', status: 'offline', task: '维修中',          soc: 0,  loc: '维修车间',          todayKm: 0 }
         ]
       },
       safety: {
-        sd15: { alert: 580, takeover: 192 },
-        sd22c: { alert: 704, takeover: 234 },
+        sd15: { alert: 208, takeover: 68 },
+        sd22c: { alert: 252, takeover: 84 },
         severity: [
-          { name: '高', value: 286, color: '#FF5470' },
-          { name: '中', value: 684, color: '#FFB546' },
-          { name: '低', value: 740, color: '#2EE6C5' }
+          { name: '高', value: 102, color: '#FF5470' },
+          { name: '中', value: 244, color: '#FFB546' },
+          { name: '低', value: 265, color: '#2EE6C5' }
         ],
         events: [
           { time: '昨日 14:32', vehicle: 'VHC-09', model: 'SD22C', type: '接管', sev: '高', desc: '路径临时封闭 · 人工接管',     status: '已处理' },
-          { time: '昨日 11:42', vehicle: 'VHC-12', model: 'SD22C', type: '接管', sev: '高', desc: '行人横穿 · 紧急接管',         status: '已处理' },
-          { time: '前日 09:15', vehicle: 'VHC-04', model: 'SD15',  type: '告警', sev: '高', desc: '电池温度告警',                 status: '已处理' },
-          { time: '前日 16:20', vehicle: 'VHC-11', model: 'SD22C', type: '接管', sev: '中', desc: '施工区域绕行',                 status: '已处理' },
+          { time: '昨日 11:42', vehicle: 'VHC-03', model: 'SD15',  type: '接管', sev: '高', desc: '行人横穿 · 紧急接管',         status: '已处理' },
+          { time: '前日 09:15', vehicle: 'VHC-01', model: 'SD15',  type: '告警', sev: '高', desc: '电池温度告警',                 status: '已处理' },
+          { time: '前日 16:20', vehicle: 'VHC-10', model: 'SD22C', type: '接管', sev: '中', desc: '施工区域绕行',                 status: '已处理' },
           { time: '6/19 08:14', vehicle: 'VHC-02', model: 'SD15',  type: '告警', sev: '中', desc: '激光雷达点云异常',             status: '已处理' },
           { time: '6/18 22:50', vehicle: 'VHC-10', model: 'SD22C', type: '告警', sev: '中', desc: '通信链路抖动',                 status: '已处理' },
           { time: '6/17 11:08', vehicle: 'VHC-09', model: 'SD22C', type: '事件', sev: '低', desc: '充电完成',                     status: '已完成' },
-          { time: '6/16 19:36', vehicle: 'VHC-05', model: 'SD15',  type: '事件', sev: '低', desc: '加水补给完成',                 status: '已完成' }
+          { time: '6/16 19:36', vehicle: 'VHC-01', model: 'SD15',  type: '事件', sev: '低', desc: '加水补给完成',                 status: '已完成' }
         ]
       },
       resources: {
         charge: {
-          count: 8421, total: 286540, avgInterval: 52, avgDuration: 31,
-          hourly: [12,8,5,3,4,9,18,28,32,28,24,22,26,24,20,18,16,12,8,5,3,2,8,14],
+          count: 3008, total: 102340, avgInterval: 52, avgDuration: 31,
+          hourly: [4,3,2,1,1,3,6,10,12,10,9,8,9,9,7,6,6,4,3,2,1,1,3,5],
           records: [
-            { time: '昨日 13:22', vehicle: 'VHC-12', station: 'C-07', amount: 62, duration: 32 },
+            { time: '昨日 13:22', vehicle: 'VHC-03', station: 'C-07', amount: 62, duration: 32 },
             { time: '昨日 11:08', vehicle: 'VHC-09', station: 'C-03', amount: 76, duration: 41 },
-            { time: '昨日 09:15', vehicle: 'VHC-04', station: 'C-07', amount: 58, duration: 28 },
+            { time: '昨日 09:15', vehicle: 'VHC-01', station: 'C-07', amount: 58, duration: 28 },
             { time: '前日 14:40', vehicle: 'VHC-02', station: 'C-02', amount: 70, duration: 36 },
             { time: '前日 10:25', vehicle: 'VHC-10', station: 'C-04', amount: 68, duration: 34 }
           ]
         },
         water: {
-          count: 11248, total: 82460, avgInterval: 38, avgDuration: 11,
-          hourly: [8,5,3,2,3,8,16,26,32,28,26,24,28,26,22,20,16,10,6,3,2,2,6,10],
+          count: 4017, total: 29450, avgInterval: 38, avgDuration: 11,
+          hourly: [3,2,1,1,1,3,6,9,12,10,9,9,10,9,8,7,6,4,2,1,1,1,2,4],
           records: [
             { time: '昨日 12:15', vehicle: 'VHC-09', station: 'W-03', amount: 120, duration: 14 },
             { time: '昨日 10:48', vehicle: 'VHC-02', station: 'W-01', amount: 95,  duration: 11 },
-            { time: '前日 15:20', vehicle: 'VHC-05', station: 'W-04', amount: 108, duration: 13 },
-            { time: '前日 09:30', vehicle: 'VHC-11', station: 'W-02', amount: 102, duration: 12 }
+            { time: '前日 15:20', vehicle: 'VHC-01', station: 'W-04', amount: 108, duration: 13 },
+            { time: '前日 09:30', vehicle: 'VHC-10', station: 'W-02', amount: 102, duration: 12 }
           ]
         },
         trash: {
-          count: 5186, total: 462, avgInterval: 102, avgDuration: 17,
-          hourly: [2,1,1,1,1,4,8,12,16,14,12,10,12,10,10,8,6,4,2,1,1,1,2,4],
+          count: 1852, total: 165, avgInterval: 102, avgDuration: 17,
+          hourly: [1,0,0,0,0,1,3,4,6,5,4,4,4,4,4,3,2,1,1,0,0,0,1,1],
           records: [
             { time: '昨日 13:54', vehicle: 'VHC-09', station: 'T-02', amount: 8.5, duration: 22 },
             { time: '昨日 11:30', vehicle: 'VHC-03', station: 'T-01', amount: 7.2, duration: 18 },
-            { time: '前日 16:10', vehicle: 'VHC-11', station: 'T-03', amount: 7.8, duration: 20 }
+            { time: '前日 16:10', vehicle: 'VHC-10', station: 'T-03', amount: 7.8, duration: 20 }
           ]
         }
       },
@@ -1448,7 +1412,7 @@ const DATASET = {
         projects: [
           {
             name: '黄埔滨江改造段', deadline: '2026-07-15',
-            done: 1842, total: 1900, color: '#00E5FF',
+            done: 658, total: 679, color: '#00E5FF',
             vehicles: ['VHC-01', 'VHC-03', 'VHC-09'],
             subtasks: [
               { name: '黄埔滨江改造段·上午班', vehicle: 'VHC-01', status: '完成', progress: 100 },
@@ -1459,7 +1423,7 @@ const DATASET = {
           },
           {
             name: '浦东主干道清扫', deadline: '2026-06-30',
-            done: 2128, total: 2200, color: '#B6FF3D',
+            done: 760, total: 786, color: '#B6FF3D',
             vehicles: ['VHC-02', 'VHC-10'],
             subtasks: [
               { name: '浦东主干道清扫·上午班', vehicle: 'VHC-02', status: '完成', progress: 100 },
@@ -1468,29 +1432,29 @@ const DATASET = {
           },
           {
             name: '徐汇商圈夜间保洁', deadline: '2026-07-20',
-            done: 1564, total: 1740, color: '#FFB546',
-            vehicles: ['VHC-05', 'VHC-11'],
+            done: 559, total: 621, color: '#FFB546',
+            vehicles: ['VHC-09', 'VHC-10'],
             subtasks: [
-              { name: '徐汇商圈夜间保洁·A班', vehicle: 'VHC-05', status: '进行', progress: 82 },
-              { name: '徐汇商圈夜间保洁·B班', vehicle: 'VHC-11', status: '进行', progress: 70 }
+              { name: '徐汇商圈夜间保洁·A班', vehicle: 'VHC-09', status: '进行', progress: 82 },
+              { name: '徐汇商圈夜间保洁·B班', vehicle: 'VHC-10', status: '进行', progress: 70 }
             ]
           },
           {
             name: '静安寺周边网格', deadline: '2026-06-22',
-            done: 1486, total: 1486, color: '#B6FF3D',
-            vehicles: ['VHC-06'],
+            done: 531, total: 531, color: '#B6FF3D',
+            vehicles: ['VHC-02'],
             subtasks: [
-              { name: '静安寺周边网格·上午班', vehicle: 'VHC-06', status: '完成', progress: 100 },
-              { name: '静安寺周边网格·下午班', vehicle: 'VHC-06', status: '完成', progress: 100 }
+              { name: '静安寺周边网格·上午班', vehicle: 'VHC-02', status: '完成', progress: 100 },
+              { name: '静安寺周边网格·下午班', vehicle: 'VHC-02', status: '完成', progress: 100 }
             ]
           },
           {
             name: '长宁商务区巡扫', deadline: '2026-07-10',
-            done: 1401, total: 1748, color: '#FF5470',
-            vehicles: ['VHC-08'],
+            done: 500, total: 624, color: '#FF5470',
+            vehicles: ['VHC-01'],
             subtasks: [
-              { name: '长宁商务区巡扫·上午班', vehicle: 'VHC-08', status: '进行', progress: 74 },
-              { name: '长宁商务区巡扫·下午班', vehicle: 'VHC-08', status: '进行', progress: 58 }
+              { name: '长宁商务区巡扫·上午班', vehicle: 'VHC-01', status: '进行', progress: 74 },
+              { name: '长宁商务区巡扫·下午班', vehicle: 'VHC-01', status: '进行', progress: 58 }
             ]
           }
         ]
@@ -1835,14 +1799,14 @@ function renderSafety(dim) {
    ============================================================ */
 const EVENTS = [
   { time: '14:32:08', type: 'takeover', title: '人工接管 #TK-0318', meta: 'VHC-09 · 路径临时封闭', c: 'var(--teal)' },
-  { time: '14:18:42', type: 'alert', title: '激光雷达点云异常', meta: 'VHC-04 · 已自动降级', c: 'var(--rose)' },
+  { time: '14:18:42', type: 'alert', title: '激光雷达点云异常', meta: 'VHC-01 · 已自动降级', c: 'var(--rose)' },
   { time: '13:54:11', type: 'trash', title: '垃圾倾倒完成', meta: 'VHC-09 · 容量 100%→12%', c: 'var(--violet)' },
-  { time: '13:22:36', type: 'charge', title: '充电开始', meta: 'VHC-12 · SOC 18% · 桩 #C-07', c: 'var(--lime)' },
-  { time: '12:48:09', type: 'alert', title: '电池温度告警', meta: 'VHC-04 · 48°C · 风扇提速', c: 'var(--rose)' },
+  { time: '13:22:36', type: 'charge', title: '充电开始', meta: 'VHC-03 · SOC 18% · 桩 #C-07', c: 'var(--lime)' },
+  { time: '12:48:09', type: 'alert', title: '电池温度告警', meta: 'VHC-02 · 48°C · 风扇提速', c: 'var(--rose)' },
   { time: '12:15:53', type: 'water', title: '加水补给完成', meta: 'VHC-09 · 120 L · 站点 #W-03', c: '#4FC3F7' },
-  { time: '11:42:18', type: 'takeover', title: '人工接管 #TK-0317', meta: 'VHC-12 · 行人横穿', c: 'var(--teal)' },
+  { time: '11:42:18', type: 'takeover', title: '人工接管 #TK-0317', meta: 'VHC-03 · 行人横穿', c: 'var(--teal)' },
   { time: '11:08:44', type: 'charge', title: '充电完成', meta: 'VHC-09 · SOC 19%→95%', c: 'var(--lime)' },
-  { time: '10:36:22', type: 'alert', title: '通信链路抖动', meta: 'VHC-04 · 5G RSSI -98 dBm', c: 'var(--amber)' },
+  { time: '10:36:22', type: 'alert', title: '通信链路抖动', meta: 'VHC-01 · 5G RSSI -98 dBm', c: 'var(--amber)' },
 ];
 const EVENT_ICONS = {
   takeover: 'M12 2 L4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5z',
