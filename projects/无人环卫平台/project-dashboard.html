@@ -338,26 +338,26 @@
 
   /* ============ 安全事件 浮签 ============ */
   .safety-block {
-    grid-column: span 2; grid-row: span 2;
-    padding: 14px 16px;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    grid-column: span 2; grid-row: span 3;
+    padding: 10px 13px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 5px;
     background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.6));
   }
   .safety-pill-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px;
   }
-  .safety-pill-cell { display: flex; flex-direction: column; gap: 4px; }
+  .safety-pill-cell { display: flex; flex-direction: column; gap: 2px; }
   .safety-pill-label {
-    font-family: 'Space Mono', monospace; font-size: 10px;
-    color: var(--text-mute); letter-spacing: 0.18em; text-transform: uppercase;
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    color: var(--text-mute); letter-spacing: 0.12em; text-transform: uppercase;
   }
   .safety-pill-val {
-    font-family: 'Space Mono', monospace; font-size: 32px; font-weight: 700;
-    line-height: 1; letter-spacing: -0.02em;
+    font-family: 'Space Mono', monospace; font-size: 26px; font-weight: 700;
+    line-height: 1.1; letter-spacing: -0.02em;
   }
   .safety-pill-val.alert { color: var(--rose); filter: drop-shadow(0 0 8px rgba(255,84,112,0.4)); }
   .safety-pill-val.takeover { color: var(--teal); filter: drop-shadow(0 0 8px rgba(46,230,197,0.4)); }
-  .safety-pill-trend { font-family: 'Space Mono', monospace; font-size: 11px; }
+  .safety-pill-trend { font-family: 'Space Mono', monospace; font-size: 10px; }
   .safety-pill-trend.up { color: var(--rose); }
   .safety-pill-trend.down { color: var(--lime); }
 
@@ -737,7 +737,7 @@
     .task-panel { grid-column: span 12; }
     .efficiency { grid-column: span 12; grid-row: span 2; }
     .fleet-status { grid-column: span 6; grid-row: span 2; }
-    .safety-block { grid-column: span 6; grid-row: span 2; }
+    .safety-block { grid-column: span 6; grid-row: span 3; }
     .resource-rhythm { grid-column: span 12; }
     .events { grid-column: span 12; }
   }
@@ -926,22 +926,22 @@
       <div class="safety-pill-grid" style="grid-template-columns:1fr 1fr;gap:8px">
         <div class="safety-pill-cell">
           <div class="safety-pill-label">SD15 · 告警</div>
-          <div class="safety-pill-val alert" id="safetySd15Alert" style="font-size:26px">0</div>
+          <div class="safety-pill-val alert" id="safetySd15Alert">0</div>
           <div class="safety-pill-trend up" id="safetySd15AlertTrend">▲ +1 vs 昨</div>
         </div>
         <div class="safety-pill-cell">
           <div class="safety-pill-label">SD15 · 接管</div>
-          <div class="safety-pill-val takeover" id="safetySd15Takeover" style="font-size:26px">0</div>
+          <div class="safety-pill-val takeover" id="safetySd15Takeover">0</div>
           <div class="safety-pill-trend down" id="safetySd15TakeoverTrend">▼ -1 vs 昨</div>
         </div>
         <div class="safety-pill-cell">
           <div class="safety-pill-label">SD22C · 告警</div>
-          <div class="safety-pill-val alert" id="safetySd22cAlert" style="font-size:26px">0</div>
+          <div class="safety-pill-val alert" id="safetySd22cAlert">0</div>
           <div class="safety-pill-trend up" id="safetySd22cAlertTrend">▲ +1 vs 昨</div>
         </div>
         <div class="safety-pill-cell">
           <div class="safety-pill-label">SD22C · 接管</div>
-          <div class="safety-pill-val takeover" id="safetySd22cTakeover" style="font-size:26px">0</div>
+          <div class="safety-pill-val takeover" id="safetySd22cTakeover">0</div>
           <div class="safety-pill-trend down" id="safetySd22cTakeoverTrend">▼ -1 vs 昨</div>
         </div>
       </div>
