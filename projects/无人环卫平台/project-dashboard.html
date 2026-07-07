@@ -234,7 +234,7 @@
 
   /* ============ 综合能效（横向条 · 降权 · 浮签） ============ */
   .efficiency {
-    grid-column: span 8; grid-row: span 2;
+    grid-column: span 7; grid-row: span 2;
     padding: 13px 22px;
     display: flex; flex-direction: column; justify-content: space-between; gap: 9px;
     background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.6));
@@ -338,26 +338,26 @@
 
   /* ============ 安全事件 浮签 ============ */
   .safety-block {
-    grid-column: span 2; grid-row: span 2;
-    padding: 8px 13px;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 3px;
+    grid-column: span 3; grid-row: span 2;
+    padding: 10px 16px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 6px;
     background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.6));
   }
   .safety-pill-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px;
   }
-  .safety-pill-cell { display: flex; flex-direction: column; gap: 1px; }
+  .safety-pill-cell { display: flex; flex-direction: column; gap: 3px; }
   .safety-pill-label {
-    font-family: 'Space Mono', monospace; font-size: 9px;
-    color: var(--text-mute); letter-spacing: 0.10em; text-transform: uppercase;
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--text-mute); letter-spacing: 0.12em; text-transform: uppercase;
   }
   .safety-pill-val {
-    font-family: 'Space Mono', monospace; font-size: 24px; font-weight: 700;
+    font-family: 'Space Mono', monospace; font-size: 28px; font-weight: 700;
     line-height: 1.05; letter-spacing: -0.02em;
   }
   .safety-pill-val.alert { color: var(--rose); filter: drop-shadow(0 0 8px rgba(255,84,112,0.4)); }
   .safety-pill-val.takeover { color: var(--teal); filter: drop-shadow(0 0 8px rgba(46,230,197,0.4)); }
-  .safety-pill-trend { font-family: 'Space Mono', monospace; font-size: 9px; }
+  .safety-pill-trend { font-family: 'Space Mono', monospace; font-size: 10px; }
   .safety-pill-trend.up { color: var(--rose); }
   .safety-pill-trend.down { color: var(--lime); }
 
