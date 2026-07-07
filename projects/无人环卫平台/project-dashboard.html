@@ -76,7 +76,7 @@
     background: linear-gradient(180deg, rgba(14,21,37,0.95), rgba(14,21,37,0.6));
     border: 1px solid var(--border-line);
     border-radius: 10px; backdrop-filter: blur(8px);
-    position: relative;
+    position: relative; z-index: 10;
   }
   .topbar::before {
     content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
@@ -123,7 +123,7 @@
     display: inline-flex; align-items: center; gap: 0;
     background: var(--bg-deep);
     border: 1px solid var(--border-line); border-radius: 8px;
-    position: relative; z-index: 10;
+    position: relative; z-index: 100;
   }
   .date-picker-wrap:hover { border-color: var(--border-strong); }
   .date-picker-wrap .date-display {
@@ -134,7 +134,7 @@
     border-radius: 7px 0 0 7px; transition: background 0.2s;
   }
   .date-picker-wrap .date-display:hover { background: rgba(0,229,255,0.08); color: var(--cyan); }
-  .date-picker-wrap .date-display .cal-icon { display: inline-flex; width: 16px; height: 16px; opacity: 0.7; }
+  .date-picker-wrap .date-display .cal-icon { display: inline-flex; width: 16px; height: 16px; opacity: 0.65; }
   .date-picker-wrap .date-display .cal-icon svg { width: 14px; height: 14px; stroke: currentColor; }
   .date-picker-wrap input[type="date"] { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
   .date-arrows { display: inline-flex; gap: 2px; padding: 0 4px; }
@@ -156,31 +156,33 @@
     background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(0,229,255,0.06));
     color: var(--cyan); box-shadow: inset 0 0 8px rgba(0,229,255,0.1);
   }
-  /* Calendar dropdown */
+
+  /* Calendar dropdown — dark sci-fi, matches CITIBOT-OPS design system */
   .cal-dropdown {
-    position: absolute; top: calc(100% + 6px); left: 0; z-index: 100;
-    width: 256px;
+    position: absolute; top: calc(100% + 8px); left: 0;
+    width: 244px;
     background: linear-gradient(160deg, rgba(14,21,37,0.99), rgba(10,15,28,0.99));
-    border: 1px solid rgba(82,196,255,0.22); border-radius: 10px;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.55), 0 0 24px rgba(0,229,255,0.08);
-    backdrop-filter: blur(12px);
-    padding: 10px 12px 12px;
-    display: none;
+    border: 1px solid rgba(82,196,255,0.2); border-radius: 10px;
+    box-shadow: 0 20px 56px rgba(0,0,0,0.6), 0 0 32px rgba(0,229,255,0.06);
+    padding: 12px 14px 14px;
+    opacity: 0; transform: translateY(-8px); pointer-events: none;
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
   }
-  .date-picker-wrap.open .cal-dropdown { display: block; }
+  .date-picker-wrap.open .cal-dropdown { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .cal-header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 10px; padding: 0 2px;
   }
   .cal-nav {
-    width: 26px; height: 26px; display: grid; place-items: center;
-    border-radius: 5px; cursor: pointer; font-size: 11px;
-    color: var(--text-mute); transition: all 0.2s;
+    width: 28px; height: 28px; display: grid; place-items: center;
+    border-radius: 6px; cursor: pointer; transition: background 0.2s;
   }
-  .cal-nav:hover { background: rgba(0,229,255,0.12); color: var(--cyan); }
+  .cal-nav:hover { background: rgba(0,229,255,0.12); }
+  .cal-nav svg { width: 12px; height: 12px; stroke: var(--text-sec); }
+  .cal-nav:hover svg { stroke: var(--cyan); }
   .cal-month-label {
-    font-family: 'Space Mono', monospace; font-size: 12px;
-    color: var(--text-pri); letter-spacing: 0.06em;
+    font-family: 'Space Mono', monospace; font-size: 12.5px; font-weight: 500;
+    color: var(--text-pri); letter-spacing: 0.06em; user-select: none;
   }
   .cal-weekdays {
     display: grid; grid-template-columns: repeat(7, 1fr);
@@ -188,36 +190,44 @@
   }
   .cal-weekdays span {
     font-family: 'Space Mono', monospace; font-size: 9.5px;
-    color: var(--text-mute); letter-spacing: 0.08em;
-    padding: 3px 0;
+    color: var(--text-mute); letter-spacing: 0.06em;
+    padding: 4px 0;
   }
   .cal-grid {
     display: grid; grid-template-columns: repeat(7, 1fr);
-    gap: 2px; text-align: center;
+    gap: 3px; text-align: center;
   }
   .cal-day {
-    height: 30px; display: grid; place-items: center;
-    border-radius: 5px; cursor: pointer; transition: all 0.15s;
-    font-family: 'Space Mono', monospace; font-size: 11.5px;
-    color: var(--text-sec);
+    height: 32px; display: grid; place-items: center;
+    border-radius: 6px; cursor: pointer; transition: all 0.18s ease-out;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    color: var(--text-sec); position: relative;
   }
   .cal-day:hover { background: rgba(0,229,255,0.1); color: var(--text-pri); }
-  .cal-day.other { color: rgba(126,141,171,0.3); pointer-events: none; }
-  .cal-day.today { border: 1px solid rgba(0,229,255,0.3); }
-  .cal-day.selected { background: rgba(0,229,255,0.18); color: var(--cyan); font-weight: 700; }
-  .cal-day.selected.today { border-color: var(--cyan); }
+  .cal-day:active { transform: scale(0.93); transition-duration: 0.08s; }
+  .cal-day.other { color: rgba(126,141,171,0.25); cursor: default; pointer-events: none; }
+  .cal-day.today {
+    color: var(--cyan);
+    box-shadow: inset 0 0 0 1px rgba(0,229,255,0.35);
+  }
+  .cal-day.selected {
+    background: rgba(0,229,255,0.2); color: var(--cyan); font-weight: 700;
+    box-shadow: 0 0 10px rgba(0,229,255,0.25);
+  }
+  .cal-day.selected.today { box-shadow: 0 0 10px rgba(0,229,255,0.35), inset 0 0 0 1px var(--cyan); }
   .cal-footer {
-    margin-top: 8px; padding-top: 8px;
-    border-top: 1px solid var(--border-line);
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid rgba(82,196,255,0.1);
   }
   .cal-footer-btn {
-    display: block; width: 100%; padding: 6px 0; border-radius: 6px;
+    display: block; width: 100%; padding: 7px 0; border-radius: 6px;
     cursor: pointer; text-align: center; transition: all 0.2s;
-    font-family: 'Space Mono', monospace; font-size: 11px;
-    color: var(--amber); letter-spacing: 0.1em;
-    border: 1px solid rgba(255,181,70,0.2);
+    font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.1em;
+    color: var(--amber); border: 1px solid rgba(255,181,70,0.18);
+    background: transparent;
   }
-  .cal-footer-btn:hover { background: rgba(255,181,70,0.1); border-color: rgba(255,181,70,0.4); }
+  .cal-footer-btn:hover { background: rgba(255,181,70,0.08); border-color: rgba(255,181,70,0.35); }
+  .cal-footer-btn:active { transform: scale(0.97); transition-duration: 0.08s; }
 
   /* ============ Bento 主网格 - 不对称布局 ============ */
   .bento {
@@ -2483,9 +2493,9 @@ function renderCalendar(ddId, inputId, labelId) {
   const selected = input.value;
 
   let html = '<div class="cal-header">';
-  html += `<span class="cal-nav" data-action="prevM">◀</span>`;
+  html += `<span class="cal-nav" data-action="prevM"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>`;
   html += `<span class="cal-month-label">${y}年${m}月</span>`;
-  html += `<span class="cal-nav" data-action="nextM">▶</span>`;
+  html += `<span class="cal-nav" data-action="nextM"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>`;
   html += '</div><div class="cal-weekdays">';
   WEEKDAYS_SHORT.forEach(w => html += `<span>${w}</span>`);
   html += '</div><div class="cal-grid">';
