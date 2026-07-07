@@ -1,7 +1,7 @@
 ---
 name: doc-expert
 description: 产品文档专家，负责撰写PRD、用户故事、竞品分析、需求文档
-tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
+tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, Skill
 model: inherit
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: proto-expert
 description: 交互原型专家，负责生成HTML原型页面、标注交互行为、制作可演示的界面
-tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
+tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, Skill
 model: inherit
 ---
 

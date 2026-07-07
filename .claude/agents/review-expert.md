@@ -1,7 +1,7 @@
 ---
 name: review-expert
 description: 产品审查专家，负责检查需求漏洞、逻辑矛盾、边界遗漏、原型缺陷
-tools: Read, Glob, Grep, WebSearch, WebFetch
+tools: Read, Glob, Grep, WebSearch, WebFetch, Skill
 model: inherit
 ---
 
