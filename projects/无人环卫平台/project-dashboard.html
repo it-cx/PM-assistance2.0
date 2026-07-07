@@ -76,7 +76,7 @@
     background: linear-gradient(180deg, rgba(14,21,37,0.95), rgba(14,21,37,0.6));
     border: 1px solid var(--border-line);
     border-radius: 10px; backdrop-filter: blur(8px);
-    position: relative; overflow: hidden;
+    position: relative;
   }
   .topbar::before {
     content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
@@ -644,6 +644,7 @@
     background: linear-gradient(180deg, rgba(14,21,37,0.96), rgba(14,21,37,0.82));
     border-bottom: 1px solid var(--border-line);
     backdrop-filter: blur(8px);
+    overflow: visible;
   }
   .modal-title-wrap { display: flex; align-items: center; gap: 14px; }
   .modal-title-bar { width: 4px; height: 28px; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); border-radius: 2px; }
