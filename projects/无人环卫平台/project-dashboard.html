@@ -134,17 +134,10 @@
     border-radius: 7px 0 0 7px; transition: background 0.2s;
   }
   .date-picker-wrap .date-display:hover { background: rgba(0,229,255,0.08); color: var(--cyan); }
-  .date-picker-wrap .date-display .cal-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; opacity: 0.7;
-  }
+  .date-picker-wrap .date-display .cal-icon { display: inline-flex; width: 16px; height: 16px; opacity: 0.7; }
   .date-picker-wrap .date-display .cal-icon svg { width: 14px; height: 14px; stroke: currentColor; }
-  .date-picker-wrap input[type="date"] {
-    position: absolute; inset: 0; opacity: 0; pointer-events: none;
-  }
-  .date-arrows {
-    display: inline-flex; gap: 2px; padding: 0 4px;
-  }
+  .date-picker-wrap input[type="date"] { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+  .date-arrows { display: inline-flex; gap: 2px; padding: 0 4px; }
   .date-arrows span {
     display: inline-grid; place-items: center; width: 22px; height: 22px;
     border-radius: 4px; cursor: pointer; font-size: 10px; color: var(--text-mute);
@@ -163,6 +156,68 @@
     background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(0,229,255,0.06));
     color: var(--cyan); box-shadow: inset 0 0 8px rgba(0,229,255,0.1);
   }
+  /* Calendar dropdown */
+  .cal-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 100;
+    width: 256px;
+    background: linear-gradient(160deg, rgba(14,21,37,0.99), rgba(10,15,28,0.99));
+    border: 1px solid rgba(82,196,255,0.22); border-radius: 10px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.55), 0 0 24px rgba(0,229,255,0.08);
+    backdrop-filter: blur(12px);
+    padding: 10px 12px 12px;
+    display: none;
+  }
+  .date-picker-wrap.open .cal-dropdown { display: block; }
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .cal-nav {
+    width: 26px; height: 26px; display: grid; place-items: center;
+    border-radius: 5px; cursor: pointer; font-size: 11px;
+    color: var(--text-mute); transition: all 0.2s;
+  }
+  .cal-nav:hover { background: rgba(0,229,255,0.12); color: var(--cyan); }
+  .cal-month-label {
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    color: var(--text-pri); letter-spacing: 0.06em;
+  }
+  .cal-weekdays {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    text-align: center; margin-bottom: 4px;
+  }
+  .cal-weekdays span {
+    font-family: 'Space Mono', monospace; font-size: 9.5px;
+    color: var(--text-mute); letter-spacing: 0.08em;
+    padding: 3px 0;
+  }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 2px; text-align: center;
+  }
+  .cal-day {
+    height: 30px; display: grid; place-items: center;
+    border-radius: 5px; cursor: pointer; transition: all 0.15s;
+    font-family: 'Space Mono', monospace; font-size: 11.5px;
+    color: var(--text-sec);
+  }
+  .cal-day:hover { background: rgba(0,229,255,0.1); color: var(--text-pri); }
+  .cal-day.other { color: rgba(126,141,171,0.3); pointer-events: none; }
+  .cal-day.today { border: 1px solid rgba(0,229,255,0.3); }
+  .cal-day.selected { background: rgba(0,229,255,0.18); color: var(--cyan); font-weight: 700; }
+  .cal-day.selected.today { border-color: var(--cyan); }
+  .cal-footer {
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid var(--border-line);
+  }
+  .cal-footer-btn {
+    display: block; width: 100%; padding: 6px 0; border-radius: 6px;
+    cursor: pointer; text-align: center; transition: all 0.2s;
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: var(--amber); letter-spacing: 0.1em;
+    border: 1px solid rgba(255,181,70,0.2);
+  }
+  .cal-footer-btn:hover { background: rgba(255,181,70,0.1); border-color: rgba(255,181,70,0.4); }
 
   /* ============ Bento 主网格 - 不对称布局 ============ */
   .bento {
@@ -822,6 +877,7 @@
       </span>
       <input type="date" id="dateInput" value="2026-06-16">
       <span class="cumulative-link" id="cumulativeLink">累计</span>
+      <div class="cal-dropdown" id="calDropdown"></div>
     </div>
   </header>
 
@@ -1112,6 +1168,7 @@
           </span>
           <input type="date" id="modalDateInput" value="2026-06-16">
           <span class="cumulative-link" id="modalCumulativeLink">累计</span>
+          <div class="cal-dropdown" id="modalCalDropdown"></div>
         </div>
         <button class="modal-close" id="modalClose" aria-label="关闭" data-overlay>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2402,7 +2459,7 @@ const MODAL_REGISTRY = {
 };
 
 /* ============================================================
-   时钟 + 日期选择器
+   时钟 + 暗色日历组件
    ============================================================ */
 function tickClock() {
   const d = new Date();
@@ -2413,6 +2470,76 @@ function tickClock() {
 function fmtDateLabel(iso) {
   const d = new Date(iso + 'T00:00:00');
   return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+const WEEKDAYS_SHORT = ['日','一','二','三','四','五','六'];
+function renderCalendar(ddId, inputId, labelId) {
+  const dd = document.getElementById(ddId);
+  const input = document.getElementById(inputId);
+  const [y, m] = input.value.split('-').map(Number);
+  const firstDay = new Date(y, m - 1, 1).getDay();
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const today = new Date().toISOString().slice(0, 10);
+  const selected = input.value;
+
+  let html = '<div class="cal-header">';
+  html += `<span class="cal-nav" data-action="prevM">◀</span>`;
+  html += `<span class="cal-month-label">${y}年${m}月</span>`;
+  html += `<span class="cal-nav" data-action="nextM">▶</span>`;
+  html += '</div><div class="cal-weekdays">';
+  WEEKDAYS_SHORT.forEach(w => html += `<span>${w}</span>`);
+  html += '</div><div class="cal-grid">';
+
+  for (let i = 0; i < firstDay; i++) html += '<span class="cal-day other"></span>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls = 'cal-day';
+    if (iso === today) cls += ' today';
+    if (iso === selected) cls += ' selected';
+    html += `<span class="${cls}" data-date="${iso}">${d}</span>`;
+  }
+
+  html += '</div><div class="cal-footer">';
+  html += `<span class="cal-footer-btn" data-action="cumulative">累计 · 全生命周期</span>`;
+  html += '</div>';
+
+  dd.innerHTML = html;
+
+  dd.querySelectorAll('.cal-day[data-date]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.getElementById(inputId).value = el.dataset.date;
+      document.getElementById(labelId).textContent = fmtDateLabel(el.dataset.date);
+      switchToDate(el.dataset.date);
+      closeAllCalendars();
+    });
+  });
+  dd.querySelectorAll('.cal-nav').forEach(el => {
+    el.addEventListener('click', () => {
+      const [cy, cm] = document.getElementById(inputId).value.split('-').map(Number);
+      let ny = cy, nm = cm;
+      if (el.dataset.action === 'prevM') { nm--; if (nm < 1) { nm = 12; ny--; } }
+      else { nm++; if (nm > 12) { nm = 1; ny++; } }
+      document.getElementById(inputId).value = `${ny}-${String(nm).padStart(2,'0')}-01`;
+      renderCalendar(ddId, inputId, labelId);
+    });
+  });
+  dd.querySelector('.cal-footer-btn').addEventListener('click', () => {
+    switchToCumulative();
+    closeAllCalendars();
+  });
+}
+
+function toggleCalendar(wrapId, ddId, inputId, labelId) {
+  const wrap = document.getElementById(wrapId);
+  const isOpen = wrap.classList.contains('open');
+  closeAllCalendars();
+  if (!isOpen) {
+    renderCalendar(ddId, inputId, labelId);
+    wrap.classList.add('open');
+  }
+}
+function closeAllCalendars() {
+  document.querySelectorAll('.date-picker-wrap.open').forEach(w => w.classList.remove('open'));
 }
 
 function shiftDate(days, inputId, labelId) {
@@ -2435,41 +2562,33 @@ window.addEventListener('load', () => {
   tickClock();
   setInterval(tickClock, 1000);
 
-  // Topbar: click date label → open system date picker
-  document.getElementById('dateDisplay').addEventListener('click', () => {
-    document.getElementById('dateInput').showPicker();
+  // Topbar
+  document.getElementById('dateDisplay').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleCalendar('datePicker', 'calDropdown', 'dateInput', 'dateLabel');
   });
   document.getElementById('dateInput').addEventListener('change', e => {
     document.getElementById('dateLabel').textContent = fmtDateLabel(e.target.value);
     switchToDate(e.target.value);
   });
-  document.getElementById('datePrev').addEventListener('click', e => {
-    e.stopPropagation();
-    shiftDate(-1, 'dateInput', 'dateLabel');
-  });
-  document.getElementById('dateNext').addEventListener('click', e => {
-    e.stopPropagation();
-    shiftDate(1, 'dateInput', 'dateLabel');
-  });
+  document.getElementById('datePrev').addEventListener('click', e => { e.stopPropagation(); shiftDate(-1, 'dateInput', 'dateLabel'); });
+  document.getElementById('dateNext').addEventListener('click', e => { e.stopPropagation(); shiftDate(1, 'dateInput', 'dateLabel'); });
   document.getElementById('cumulativeLink').addEventListener('click', () => switchToCumulative());
 
-  // Modal: same pattern
-  document.getElementById('modalDateDisplay').addEventListener('click', () => {
-    document.getElementById('modalDateInput').showPicker();
+  // Modal
+  document.getElementById('modalDateDisplay').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleCalendar('modalDatePicker', 'modalCalDropdown', 'modalDateInput', 'modalDateLabel');
   });
   document.getElementById('modalDateInput').addEventListener('change', e => {
     document.getElementById('modalDateLabel').textContent = fmtDateLabel(e.target.value);
     switchToDate(e.target.value);
   });
-  document.getElementById('modalDatePrev').addEventListener('click', e => {
-    e.stopPropagation();
-    shiftDate(-1, 'modalDateInput', 'modalDateLabel');
-  });
-  document.getElementById('modalDateNext').addEventListener('click', e => {
-    e.stopPropagation();
-    shiftDate(1, 'modalDateInput', 'modalDateLabel');
-  });
+  document.getElementById('modalDatePrev').addEventListener('click', e => { e.stopPropagation(); shiftDate(-1, 'modalDateInput', 'modalDateLabel'); });
+  document.getElementById('modalDateNext').addEventListener('click', e => { e.stopPropagation(); shiftDate(1, 'modalDateInput', 'modalDateLabel'); });
   document.getElementById('modalCumulativeLink').addEventListener('click', () => switchToCumulative());
+
+  document.addEventListener('click', () => closeAllCalendars());
 
   /* Modal 触发 + 关闭 */
   document.querySelectorAll('.panel[data-modal]').forEach(p => {
