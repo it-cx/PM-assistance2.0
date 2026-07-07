@@ -119,22 +119,34 @@
   }
   @keyframes blink { 0%,100% {opacity:1} 50% {opacity:0.35} }
 
-  .dim-switch {
-    display: inline-flex; background: var(--bg-deep);
+  .date-picker-wrap {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--bg-deep);
     border: 1px solid var(--border-line); border-radius: 8px;
-    padding: 3px;
+    padding: 4px 6px 4px 14px;
   }
-  .dim-switch button {
-    padding: 7px 16px; font-size: 13px; font-family: 'Space Mono', monospace;
-    letter-spacing: 0.1em; color: var(--text-sec); background: transparent;
-    border: none; cursor: pointer; border-radius: 6px; transition: all 0.25s;
-    text-transform: uppercase;
+  .date-picker-wrap input[type="date"] {
+    background: transparent; border: none; outline: none;
+    color: var(--text-pri); font-family: 'Space Mono', monospace;
+    font-size: 13px; letter-spacing: 0.06em;
+    padding: 5px 0;
   }
-  .dim-switch button.active {
+  .date-picker-wrap input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8); cursor: pointer;
+  }
+  .date-picker-wrap .cumulative-link {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: var(--text-sec); letter-spacing: 0.1em;
+    cursor: pointer; padding: 5px 10px; border-radius: 6px;
+    border: 1px solid var(--border-line); transition: all 0.25s;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .date-picker-wrap .cumulative-link:hover { color: var(--cyan); border-color: var(--border-strong); }
+  .date-picker-wrap .cumulative-link.active {
     background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(0,229,255,0.06));
-    color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,0.3), inset 0 0 8px rgba(0,229,255,0.1);
+    color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,0.3);
+    border-color: rgba(0,229,255,0.3);
   }
-  .dim-switch button:hover:not(.active) { color: var(--text-pri); }
 
   /* ============ Bento 主网格 - 不对称布局 ============ */
   .bento {
@@ -583,7 +595,8 @@
   .modal-title { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: 0.06em; color: var(--text-pri); }
   .modal-subtitle { font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--text-sec); letter-spacing: 0.1em; margin-top: 3px; }
   .modal-head-right { display: flex; align-items: center; gap: 14px; }
-  .modal-dim-switch button { padding: 5px 12px; font-size: 11.5px; }
+  .modal-head .date-picker-wrap input[type="date"] { font-size: 12px; padding: 4px 0; }
+  .modal-head .date-picker-wrap .cumulative-link { font-size: 10px; padding: 4px 8px; }
   .modal-close {
     width: 34px; height: 34px; border-radius: 8px;
     background: rgba(255,84,112,0.08); border: 1px solid rgba(255,84,112,0.3);
@@ -781,9 +794,9 @@
       <span class="live-dot">LIVE TELEMETRY</span>
     </div>
 
-    <div class="dim-switch" id="dimSwitch">
-      <button data-dim="day" class="active">当天</button>
-      <button data-dim="total">累计</button>
+    <div class="date-picker-wrap" id="datePicker">
+      <input type="date" id="dateInput" value="2026-06-16">
+      <span class="cumulative-link" id="cumulativeLink">累计</span>
     </div>
   </header>
 
@@ -1063,9 +1076,9 @@
         </div>
       </div>
       <div class="modal-head-right">
-        <div class="dim-switch modal-dim-switch" id="modalDimSwitch" data-overlay>
-          <button data-dim="day" class="active">当天</button>
-          <button data-dim="total">累计</button>
+        <div class="date-picker-wrap" id="modalDatePicker" data-overlay>
+          <input type="date" id="modalDateInput" value="2026-06-16">
+          <span class="cumulative-link" id="modalCumulativeLink">累计</span>
         </div>
         <button class="modal-close" id="modalClose" aria-label="关闭" data-overlay>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1490,7 +1503,6 @@ function animateNum(el, target, dur = 900, decimals = null) {
    ============================================================ */
 let heroTrendChart;
 let effChart;
-let currentDim = 'day';
 let currentModalKey = null;
 const modalCharts = {};
 
@@ -1834,23 +1846,83 @@ function renderEvents() {
 }
 
 /* ============================================================
-   维度切换
+   日期选择 & 数据查找
    ============================================================ */
-function applyDim(dim) {
-  currentDim = dim;
-  document.querySelectorAll('#dimSwitch button, #modalDimSwitch button').forEach(b => {
-    b.classList.toggle('active', b.dataset.dim === dim);
-  });
-  renderHero(dim);
-  renderHeroTrend(dim);
-  renderTasks('day');
-  renderFleetStatus(dim);
-  renderSafety(dim);
-  renderEfficiency(dim);
-  renderResourceTracks(dim);
+let currentDim = '2026-06-16';
+
+function getData(dim) {
+  if (DATASET[dim]) return DATASET[dim];
+  const base = DATASET.day;
+  // today → exact base; historical → jittered
+  if (dim === '2026-06-16') return { ...base, periodLabel: '今日 · 2026-06-16 · 截至 14:32' };
+  const offset = Math.round((new Date('2026-06-16') - new Date(dim)) / 86400000);
+  const seed = offset * 1.7;
+  const j = (v, pct) => +(v * (1 + Math.sin(seed) * pct)).toFixed(1);
+  const ji = (v, range) => Math.max(0, Math.round(v + Math.sin(seed + 1) * range));
+  return {
+    periodLabel: `${dim} · 当日汇总`,
+    hero: {
+      sweepDist: j(base.hero.sweepDist, 0.18), sweepTime: j(base.hero.sweepTime, 0.15), avgSpeed: j(base.hero.avgSpeed, 0.05),
+      driveRatio: base.hero.driveRatio, workShare: ji(base.hero.workShare, 8),
+      vsYesterdayPct: (Math.sin(seed)*12 > 0 ? '+' : '') + Math.round(Math.sin(seed)*12) + '%',
+      vsYesterdayAbs: (Math.sin(seed)*5 > 0 ? '+' : '') + Math.abs(Math.sin(seed)*5).toFixed(1) + ' km',
+      vsYesterdayTime: '14:32', vsYesterdayLabel: 'vs 昨日同时段'
+    },
+    efficiency: {
+      kwhPer100km: j(base.efficiency.kwhPer100km, 0.08), totalPower: j(base.efficiency.totalPower, 0.20),
+      driveShare: j(base.efficiency.driveShare, 0.05), sd15: j(base.efficiency.sd15, 0.06), sd22c: j(base.efficiency.sd22c, 0.06),
+      baselineSd15: base.efficiency.baselineSd15, baselineSd22c: base.efficiency.baselineSd22c, baselineTotal: base.efficiency.baselineTotal
+    },
+    fleet: { online: Math.random() > 0.3 ? 4 : 5, offline: Math.random() > 0.3 ? 1 : 0, total: 5 },
+    safety: {
+      alert: ji(base.safety.alert, 3), takeover: ji(base.safety.takeover, 2),
+      sd15: { alert: ji(base.safety.sd15.alert, 2), takeover: ji(base.safety.sd15.takeover, 1) },
+      sd22c: { alert: ji(base.safety.sd22c.alert, 2), takeover: ji(base.safety.sd22c.takeover, 1) }
+    },
+    trend: {
+      hours: base.trend.hours,
+      drive: base.trend.drive.map(v => v === null ? null : j(v, 0.18)),
+      sweep: base.trend.sweep.map(v => v === null ? null : j(v, 0.18)),
+      yesterdayDrive: base.trend.yesterdayDrive.map(v => v === null ? null : j(v, 0.18)),
+      yesterdaySweep: base.trend.yesterdaySweep.map(v => v === null ? null : j(v, 0.18))
+    },
+    tasks: base.tasks,
+    resources: {
+      charge: { count: ji(base.resources.charge.count, 3), total: j(base.resources.charge.total, 0.20), marks: base.resources.charge.marks },
+      water:  { count: ji(base.resources.water.count, 4), total: j(base.resources.water.total, 0.20), marks: base.resources.water.marks },
+      trash:  { count: ji(base.resources.trash.count, 2), total: j(base.resources.trash.total, 0.20), marks: base.resources.trash.marks }
+    },
+    detail: base.detail
+  };
 }
-function switchDim(dim) {
-  applyDim(dim);
+
+function applyDate(dateStr) {
+  currentDim = dateStr;
+  const isCumulative = dateStr === 'total';
+  document.getElementById('cumulativeLink').classList.toggle('active', isCumulative);
+  document.getElementById('modalCumulativeLink').classList.toggle('active', isCumulative);
+  if (!isCumulative) {
+    document.getElementById('dateInput').value = dateStr;
+    document.getElementById('modalDateInput').value = dateStr;
+  }
+  const d = getData(dateStr);
+  // hero needs periodLabel
+  DATASET[dateStr] = d;
+  renderHero(dateStr);
+  try { renderHeroTrend(dateStr); } catch(e) {}
+  renderTasks(dateStr);
+  renderFleetStatus(dateStr);
+  renderSafety(dateStr);
+  renderEfficiency(dateStr);
+  renderResourceTracks(dateStr);
+}
+
+function switchToDate(dateStr) {
+  applyDate(dateStr);
+  if (currentModalKey) refreshModal();
+}
+function switchToCumulative() {
+  applyDate('total');
   if (currentModalKey) refreshModal();
 }
 
@@ -1860,15 +1932,15 @@ function switchDim(dim) {
 function openModal(key) {
   const cfg = MODAL_REGISTRY[key];
   if (!cfg) return;
-  if (cfg.singleDim && currentDim !== 'day') applyDim('day');
+  if (cfg.singleDim && currentDim === 'total') switchToDate('2026-06-16');
   currentModalKey = key;
-  document.getElementById('modalDimSwitch').style.display = cfg.singleDim ? 'none' : '';
+  const isCumulative = currentDim === 'total';
+  document.getElementById('modalDatePicker').style.display = cfg.singleDim ? 'none' : '';
   const modal = document.getElementById('modalMask');
   document.getElementById('modalTitle').textContent = cfg.title;
   document.getElementById('modalSubtitle').textContent = cfg.subtitle(currentDim);
-  document.querySelectorAll('#modalDimSwitch button').forEach(b => {
-    b.classList.toggle('active', b.dataset.dim === currentDim);
-  });
+  if (!isCumulative) document.getElementById('modalDateInput').value = currentDim;
+  document.getElementById('modalCumulativeLink').classList.toggle('active', isCumulative);
   document.getElementById('modalBody').innerHTML = cfg.render(currentDim);
   modal.hidden = false;
   requestAnimationFrame(() => {
@@ -1896,7 +1968,10 @@ function refreshModal() {
   Object.values(modalCharts).forEach(c => c && c.dispose && c.dispose());
   Object.keys(modalCharts).forEach(k => delete modalCharts[k]);
   const cfg = MODAL_REGISTRY[currentModalKey];
+  const isCumulative = currentDim === 'total';
   document.getElementById('modalSubtitle').textContent = cfg.subtitle(currentDim);
+  if (!isCumulative) document.getElementById('modalDateInput').value = currentDim;
+  document.getElementById('modalCumulativeLink').classList.toggle('active', isCumulative);
   document.getElementById('modalBody').innerHTML = cfg.render(currentDim);
   requestAnimationFrame(() => cfg.mount && cfg.mount(currentDim));
 }
@@ -2279,11 +2354,11 @@ function mountTaskDetail(dim) {
 }
 
 const MODAL_REGISTRY = {
-  efficiency: { title: '综合能效详情', subtitle: dim => DATASET[dim].periodLabel, render: renderEfficiencyDetail, mount: mountEfficiencyDetail },
-  fleet:      { title: '车队状态详情', subtitle: dim => DATASET[dim].periodLabel, render: renderFleetDetail,      mount: () => {}, singleDim: true },
-  safety:     { title: '安全事件详情', subtitle: () => '近 24h · 实时刷新',         render: renderSafetyDetail,     mount: mountSafetyDetail },
-  resource:   { title: '资源补给节奏详情', subtitle: dim => DATASET[dim].periodLabel, render: renderResourceDetail,   mount: mountResourceDetail },
-  task:       { title: '项目任务详情', subtitle: dim => DATASET[dim].periodLabel, render: renderTaskDetail,       mount: mountTaskDetail, singleDim: true }
+  efficiency: { title: '综合能效详情', subtitle: dim => getData(dim).periodLabel, render: renderEfficiencyDetail, mount: mountEfficiencyDetail },
+  fleet:      { title: '车队状态详情', subtitle: dim => getData(dim).periodLabel, render: renderFleetDetail,      mount: () => {}, singleDim: true },
+  safety:     { title: '安全事件详情', subtitle: () => '近 24h · 实时刷新',           render: renderSafetyDetail,     mount: mountSafetyDetail },
+  resource:   { title: '资源补给节奏详情', subtitle: dim => getData(dim).periodLabel, render: renderResourceDetail,   mount: mountResourceDetail },
+  task:       { title: '项目任务详情', subtitle: dim => getData(dim).periodLabel, render: renderTaskDetail,       mount: mountTaskDetail, singleDim: true }
 };
 
 /* ============================================================
@@ -2300,18 +2375,25 @@ function tickClock() {
    ============================================================ */
 window.addEventListener('load', () => {
   renderEvents();
-  switchDim('day');
+  switchToDate('2026-06-16');
 
   tickClock();
   setInterval(tickClock, 1000);
 
-  document.getElementById('dimSwitch').addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (btn) switchDim(btn.dataset.dim);
+  // Date picker: topbar
+  document.getElementById('dateInput').addEventListener('change', e => {
+    switchToDate(e.target.value);
   });
-  document.getElementById('modalDimSwitch').addEventListener('click', e => {
-    const btn = e.target.closest('button');
-    if (btn) switchDim(btn.dataset.dim);
+  document.getElementById('cumulativeLink').addEventListener('click', () => {
+    switchToCumulative();
+  });
+
+  // Date picker: modal
+  document.getElementById('modalDateInput').addEventListener('change', e => {
+    switchToDate(e.target.value);
+  });
+  document.getElementById('modalCumulativeLink').addEventListener('click', () => {
+    switchToCumulative();
   });
 
   /* Modal 触发 + 关闭 */
