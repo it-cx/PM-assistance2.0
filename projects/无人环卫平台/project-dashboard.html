@@ -1534,8 +1534,9 @@ const modalCharts = {};
 function renderHeroTrend(dim) {
   const d = DATASET[dim].trend;
   if (heroTrendChart) heroTrendChart.dispose();
-  heroTrendChart = echarts.init(document.getElementById('heroTrend'));
-  heroTrendChart.setOption({
+  try {
+    heroTrendChart = echarts.init(document.getElementById('heroTrend'));
+    heroTrendChart.setOption({
     backgroundColor: 'transparent',
     grid: { left: 0, right: 0, top: 5, bottom: 0 },
     xAxis: { type: 'category', show: false, boundaryGap: false, data: d.hours },
@@ -1551,6 +1552,7 @@ function renderHeroTrend(dim) {
       }
     }]
   });
+  } catch (e) { console.warn('ECharts not available for heroTrend'); }
 }
 
 /* 项目任务完成情况 */
@@ -1607,8 +1609,9 @@ function renderEfficiency(dim) {
   ];
 
   if (effChart) effChart.dispose();
-  effChart = echarts.init(document.getElementById('effChart'));
-  effChart.setOption({
+  try {
+    effChart = echarts.init(document.getElementById('effChart'));
+    effChart.setOption({
     backgroundColor: 'transparent',
     grid: { left: 50, right: 135, top: 8, bottom: 8 },
     xAxis: { type: 'value', max: 40, show: false },
@@ -1713,6 +1716,7 @@ function renderEfficiency(dim) {
       }
     ]
   });
+  } catch (e) { console.warn('ECharts not available for efficiency chart'); }
 }
 
 /* 资源节奏时间条 */
@@ -1943,11 +1947,13 @@ function kpiHTML(items) {
 }
 
 function initModalChart(id, option) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (modalCharts[id]) modalCharts[id].dispose();
-  modalCharts[id] = echarts.init(el);
-  modalCharts[id].setOption(option);
+  try {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (modalCharts[id]) modalCharts[id].dispose();
+    modalCharts[id] = echarts.init(el);
+    modalCharts[id].setOption(option);
+  } catch (e) { console.warn('ECharts not available for modal chart:', id); }
 }
 
 /* === ① 综合能效详情 === */
