@@ -120,33 +120,88 @@
   @keyframes blink { 0%,100% {opacity:1} 50% {opacity:0.35} }
 
   .date-picker-wrap {
-    display: inline-flex; align-items: center; gap: 10px;
+    display: inline-flex; align-items: center; gap: 0;
     background: var(--bg-deep);
     border: 1px solid var(--border-line); border-radius: 8px;
-    padding: 4px 6px 4px 14px;
+    position: relative;
   }
+  .date-picker-wrap:hover { border-color: var(--border-strong); }
+  .date-display {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 8px 7px 14px; cursor: pointer; user-select: none;
+    font-family: 'Space Mono', monospace; font-size: 13px;
+    color: var(--text-pri); letter-spacing: 0.06em;
+    border-radius: 7px 0 0 7px; transition: background 0.2s;
+  }
+  .date-display:hover { background: rgba(0,229,255,0.06); }
+  .date-display .chevron {
+    display: inline-block; transition: transform 0.25s;
+    color: var(--text-mute); font-size: 9px; margin-top: 1px;
+  }
+  .date-picker-wrap.open .date-display .chevron { transform: rotate(180deg); color: var(--cyan); }
   .date-picker-wrap input[type="date"] {
-    background: transparent; border: none; outline: none;
-    color: var(--text-pri); font-family: 'Space Mono', monospace;
-    font-size: 13px; letter-spacing: 0.06em;
-    padding: 5px 0;
-  }
-  .date-picker-wrap input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.8); cursor: pointer;
+    position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;
   }
   .date-picker-wrap .cumulative-link {
     font-family: 'Space Mono', monospace; font-size: 11px;
     color: var(--text-sec); letter-spacing: 0.1em;
-    cursor: pointer; padding: 5px 10px; border-radius: 6px;
-    border: 1px solid var(--border-line); transition: all 0.25s;
+    cursor: pointer; padding: 5px 10px; border-radius: 0 6px 6px 0;
+    border-left: 1px solid var(--border-line); transition: all 0.25s;
     text-transform: uppercase; white-space: nowrap;
   }
-  .date-picker-wrap .cumulative-link:hover { color: var(--cyan); border-color: var(--border-strong); }
+  .date-picker-wrap .cumulative-link:hover { color: var(--cyan); }
   .date-picker-wrap .cumulative-link.active {
     background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(0,229,255,0.06));
-    color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,0.3);
-    border-color: rgba(0,229,255,0.3);
+    color: var(--cyan); box-shadow: inset 0 0 8px rgba(0,229,255,0.1);
   }
+  /* Date Dropdown */
+  .date-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+    min-width: 210px;
+    background: linear-gradient(160deg, rgba(14,21,37,0.98), rgba(10,15,28,0.99));
+    border: 1px solid rgba(82,196,255,0.22); border-radius: 10px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 24px rgba(0,229,255,0.08);
+    backdrop-filter: blur(12px);
+    padding: 6px; overflow: hidden;
+    opacity: 0; transform: translateY(-6px); pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .date-picker-wrap.open .date-dropdown { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .date-dropdown-list { max-height: 280px; overflow-y: auto; }
+  .date-dropdown-list::-webkit-scrollbar { width: 3px; }
+  .date-dropdown-list::-webkit-scrollbar-track { background: transparent; }
+  .date-dropdown-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  .date-dropdown-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-radius: 6px; cursor: pointer;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    color: var(--text-sec); transition: all 0.15s;
+  }
+  .date-dropdown-item:hover { background: rgba(0,229,255,0.08); color: var(--text-pri); }
+  .date-dropdown-item.selected { background: rgba(0,229,255,0.12); color: var(--cyan); }
+  .date-dropdown-item .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan); box-shadow: 0 0 5px var(--cyan);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .date-dropdown-item.selected .dot { opacity: 1; }
+  .date-dropdown-item .weekday { font-size: 10px; color: var(--text-mute); margin-left: auto; margin-right: 10px; }
+  .date-dropdown-divider {
+    height: 1px; margin: 4px 8px;
+    background: linear-gradient(90deg, transparent, var(--border-line), transparent);
+  }
+  .date-dropdown-item.more {
+    color: var(--text-mute); font-size: 11px; justify-content: center;
+    border: 1px dashed rgba(82,196,255,0.15); border-radius: 6px;
+    padding: 6px; margin-top: 2px;
+  }
+  .date-dropdown-item.more:hover { color: var(--cyan); border-color: rgba(0,229,255,0.3); }
+  .date-dropdown-item.cumulative {
+    color: var(--amber); font-size: 11px; justify-content: center; letter-spacing: 0.1em;
+    border: 1px solid rgba(255,181,70,0.2); border-radius: 6px;
+    padding: 6px; margin-top: 2px;
+  }
+  .date-dropdown-item.cumulative:hover { background: rgba(255,181,70,0.1); border-color: rgba(255,181,70,0.4); }
 
   /* ============ Bento 主网格 - 不对称布局 ============ */
   .bento {
@@ -595,8 +650,7 @@
   .modal-title { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: 0.06em; color: var(--text-pri); }
   .modal-subtitle { font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--text-sec); letter-spacing: 0.1em; margin-top: 3px; }
   .modal-head-right { display: flex; align-items: center; gap: 14px; }
-  .modal-head .date-picker-wrap input[type="date"] { font-size: 12px; padding: 4px 0; }
-  .modal-head .date-picker-wrap .cumulative-link { font-size: 10px; padding: 4px 8px; }
+  .modal-head .date-picker-wrap .date-display { font-size: 12px; padding: 5px 6px 5px 10px; }
   .modal-close {
     width: 34px; height: 34px; border-radius: 8px;
     background: rgba(255,84,112,0.08); border: 1px solid rgba(255,84,112,0.3);
@@ -795,8 +849,13 @@
     </div>
 
     <div class="date-picker-wrap" id="datePicker">
+      <span class="date-display" id="dateDisplay">
+        <span id="dateLabel">6月16日</span>
+        <span class="chevron">▼</span>
+      </span>
       <input type="date" id="dateInput" value="2026-06-16">
       <span class="cumulative-link" id="cumulativeLink">累计</span>
+      <div class="date-dropdown" id="dateDropdown"></div>
     </div>
   </header>
 
@@ -1077,8 +1136,13 @@
       </div>
       <div class="modal-head-right">
         <div class="date-picker-wrap" id="modalDatePicker" data-overlay>
+          <span class="date-display" id="modalDateDisplay">
+            <span id="modalDateLabel">6月16日</span>
+            <span class="chevron">▼</span>
+          </span>
           <input type="date" id="modalDateInput" value="2026-06-16">
           <span class="cumulative-link" id="modalCumulativeLink">累计</span>
+          <div class="date-dropdown" id="modalDateDropdown"></div>
         </div>
         <button class="modal-close" id="modalClose" aria-label="关闭" data-overlay>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1904,9 +1968,10 @@ function applyDate(dateStr) {
   if (!isCumulative) {
     document.getElementById('dateInput').value = dateStr;
     document.getElementById('modalDateInput').value = dateStr;
+    document.getElementById('dateLabel').textContent = fmtDateLabel(dateStr);
+    document.getElementById('modalDateLabel').textContent = fmtDateLabel(dateStr);
   }
   const d = getData(dateStr);
-  // hero needs periodLabel
   DATASET[dateStr] = d;
   renderHero(dateStr);
   try { renderHeroTrend(dateStr); } catch(e) {}
@@ -1939,7 +2004,10 @@ function openModal(key) {
   const modal = document.getElementById('modalMask');
   document.getElementById('modalTitle').textContent = cfg.title;
   document.getElementById('modalSubtitle').textContent = cfg.subtitle(currentDim);
-  if (!isCumulative) document.getElementById('modalDateInput').value = currentDim;
+  if (!isCumulative) {
+    document.getElementById('modalDateInput').value = currentDim;
+    document.getElementById('modalDateLabel').textContent = fmtDateLabel(currentDim);
+  }
   document.getElementById('modalCumulativeLink').classList.toggle('active', isCumulative);
   document.getElementById('modalBody').innerHTML = cfg.render(currentDim);
   modal.hidden = false;
@@ -1970,7 +2038,10 @@ function refreshModal() {
   const cfg = MODAL_REGISTRY[currentModalKey];
   const isCumulative = currentDim === 'total';
   document.getElementById('modalSubtitle').textContent = cfg.subtitle(currentDim);
-  if (!isCumulative) document.getElementById('modalDateInput').value = currentDim;
+  if (!isCumulative) {
+    document.getElementById('modalDateInput').value = currentDim;
+    document.getElementById('modalDateLabel').textContent = fmtDateLabel(currentDim);
+  }
   document.getElementById('modalCumulativeLink').classList.toggle('active', isCumulative);
   document.getElementById('modalBody').innerHTML = cfg.render(currentDim);
   requestAnimationFrame(() => cfg.mount && cfg.mount(currentDim));
@@ -2362,12 +2433,72 @@ const MODAL_REGISTRY = {
 };
 
 /* ============================================================
-   时钟 + 遥测抖动
+   时钟 + 自定义日期下拉
    ============================================================ */
 function tickClock() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+const WEEKDAYS = ['周日','周一','周二','周三','周四','周五','周六'];
+function fmtDateLabel(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+function buildDateDropdown(dropdownId, displayId, labelId, inputId, cumLinkId) {
+  const dd = document.getElementById(dropdownId);
+  const today = new Date();
+  const todayISO = today.toISOString().slice(0, 10);
+  const selectedISO = document.getElementById(inputId).value;
+  let items = '';
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const iso = d.toISOString().slice(0, 10);
+    const label = fmtDateLabel(iso);
+    const wd = WEEKDAYS[d.getDay()];
+    const sel = iso === selectedISO ? ' selected' : '';
+    const todayMark = i === 0 ? ' <span style="font-size:10px;color:var(--cyan)">● 今天</span>' : '';
+    items += `<div class="date-dropdown-item${sel}" data-date="${iso}"><span>${label}</span><span class="weekday">${wd}</span>${todayMark}<span class="dot"></span></div>`;
+  }
+  items += `<div class="date-dropdown-divider"></div>`;
+  items += `<div class="date-dropdown-item more" data-action="more">更多日期...</div>`;
+  items += `<div class="date-dropdown-item cumulative" data-action="cumulative">累计 · 全生命周期</div>`;
+  dd.innerHTML = `<div class="date-dropdown-list">${items}</div>`;
+  // Bind clicks
+  dd.querySelectorAll('.date-dropdown-item[data-date]').forEach(el => {
+    el.addEventListener('click', () => {
+      const iso = el.dataset.date;
+      document.getElementById(inputId).value = iso;
+      document.getElementById(labelId).textContent = fmtDateLabel(iso);
+      switchToDate(iso);
+      closeAllDropdowns();
+    });
+  });
+  dd.querySelector('.date-dropdown-item[data-action="more"]').addEventListener('click', () => {
+    document.getElementById(inputId).showPicker();
+    closeAllDropdowns();
+  });
+  dd.querySelector('.date-dropdown-item[data-action="cumulative"]').addEventListener('click', () => {
+    switchToCumulative();
+    closeAllDropdowns();
+  });
+}
+function toggleDateDropdown(wrapId, dropdownId, displayId, labelId, inputId, cumLinkId) {
+  const wrap = document.getElementById(wrapId);
+  const isOpen = wrap.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) {
+    buildDateDropdown(dropdownId, displayId, labelId, inputId, cumLinkId);
+    wrap.classList.add('open');
+  }
+}
+function closeAllDropdowns() {
+  document.querySelectorAll('.date-picker-wrap.open').forEach(w => w.classList.remove('open'));
+}
+function updateDateDisplay(labelId, inputId) {
+  document.getElementById(labelId).textContent = fmtDateLabel(document.getElementById(inputId).value);
 }
 
 /* ============================================================
@@ -2380,21 +2511,38 @@ window.addEventListener('load', () => {
   tickClock();
   setInterval(tickClock, 1000);
 
-  // Date picker: topbar
+  // Topbar date picker
+  document.getElementById('dateDisplay').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleDateDropdown('datePicker', 'dateDropdown', 'dateDisplay', 'dateLabel', 'dateInput', 'cumulativeLink');
+  });
   document.getElementById('dateInput').addEventListener('change', e => {
+    document.getElementById('dateLabel').textContent = fmtDateLabel(e.target.value);
     switchToDate(e.target.value);
   });
-  document.getElementById('cumulativeLink').addEventListener('click', () => {
+  document.getElementById('cumulativeLink').addEventListener('click', e => {
+    e.stopPropagation();
     switchToCumulative();
+    closeAllDropdowns();
   });
 
-  // Date picker: modal
+  // Modal date picker
+  document.getElementById('modalDateDisplay').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleDateDropdown('modalDatePicker', 'modalDateDropdown', 'modalDateDisplay', 'modalDateLabel', 'modalDateInput', 'modalCumulativeLink');
+  });
   document.getElementById('modalDateInput').addEventListener('change', e => {
+    document.getElementById('modalDateLabel').textContent = fmtDateLabel(e.target.value);
     switchToDate(e.target.value);
   });
-  document.getElementById('modalCumulativeLink').addEventListener('click', () => {
+  document.getElementById('modalCumulativeLink').addEventListener('click', e => {
+    e.stopPropagation();
     switchToCumulative();
+    closeAllDropdowns();
   });
+
+  // Close dropdown on outside click
+  document.addEventListener('click', () => closeAllDropdowns());
 
   /* Modal 触发 + 关闭 */
   document.querySelectorAll('.panel[data-modal]').forEach(p => {
