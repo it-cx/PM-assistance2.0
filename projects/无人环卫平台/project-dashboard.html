@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CITIBOT-OPS · 无人清扫车运营驾驶舱</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg-void: #050810;
+    --bg-deep: #0A0F1C;
+    --bg-panel: #0E1525;
+    --bg-elev: #131C30;
+    --border-line: rgba(82, 196, 255, 0.12);
+    --border-strong: rgba(82, 196, 255, 0.28);
+    --text-pri: #E8F4FF;
+    --text-sec: #B0C0DC;
+    --text-mute: #7E8DAB;
+    --cyan: #00E5FF;
+    --cyan-dim: #00B8D4;
+    --amber: #FFB546;
+    --amber-dim: #E89500;
+    --magenta: #FF3D9A;
+    --lime: #B6FF3D;
+    --violet: #8B5CF6;
+    --rose: #FF5470;
+    --teal: #2EE6C5;
+  }
+  * { box-sizing: border-box; }
+
+  /* 全局隐藏滚动条，保留滚动功能 */
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  html, body {
+    margin: 0; background: var(--bg-void); color: var(--text-pri);
+    font-family: 'Noto Sans SC', 'Space Mono', sans-serif;
+    overflow-x: hidden; min-height: 100vh;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse 70% 50% at 15% 0%, rgba(0, 229, 255, 0.10), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 95% 15%, rgba(255, 181, 70, 0.07), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 50% 110%, rgba(139, 92, 246, 0.06), transparent 60%),
+      linear-gradient(rgba(82, 196, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(82, 196, 255, 0.022) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.4'/></svg>");
+    opacity: 0.025; mix-blend-mode: overlay; pointer-events: none; z-index: 1;
+  }
+
+  .app { position: relative; z-index: 2; padding: 16px 22px 28px; max-width: 1820px; margin: 0 auto; }
+
+  .f-display { font-family: 'Orbitron', sans-serif; letter-spacing: 0.06em; }
+  .f-mono { font-family: 'Space Mono', monospace; }
+  .num { font-family: 'Space Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  /* ============ 顶栏 ============ */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 22px;
+    background: linear-gradient(180deg, rgba(14,21,37,0.95), rgba(14,21,37,0.6));
+    border: 1px solid var(--border-line);
+    border-radius: 10px; backdrop-filter: blur(8px);
+    position: relative; overflow: hidden;
+  }
+  .topbar::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent); opacity: 0.6;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark {
+    width: 38px; height: 38px; display: grid; place-items: center;
+    border: 1px solid var(--cyan); border-radius: 8px;
+    background: radial-gradient(circle at 30% 30%, rgba(0,229,255,0.3), rgba(0,229,255,0.05));
+    box-shadow: 0 0 18px rgba(0,229,255,0.35), inset 0 0 12px rgba(0,229,255,0.2);
+    position: relative;
+  }
+  .brand-mark svg { width: 22px; height: 22px; color: var(--cyan); }
+  .brand-mark::after {
+    content: ''; position: absolute; inset: -3px;
+    border: 1px solid rgba(0,229,255,0.4); border-radius: 10px;
+    animation: pulse-ring 2.4s ease-out infinite;
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.7; }
+    100% { transform: scale(1.25); opacity: 0; }
+  }
+  .brand-title { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 18px; letter-spacing: 0.12em; line-height: 1; }
+  .brand-sub { font-size: 12.5px; color: var(--text-sec); letter-spacing: 0.18em; margin-top: 5px; text-transform: uppercase; }
+  .status-cluster { display: flex; align-items: center; gap: 24px; }
+  .status-item { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .status-label { font-size: 11.5px; color: var(--text-sec); letter-spacing: 0.18em; text-transform: uppercase; }
+  .status-val { font-family: 'Space Mono', monospace; font-size: 16px; color: var(--text-pri); }
+  .live-dot {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px; border: 1px solid var(--lime); border-radius: 999px;
+    background: rgba(182, 255, 61, 0.08); font-size: 12px; letter-spacing: 0.18em;
+    color: var(--lime); font-family: 'Space Mono', monospace;
+  }
+  .live-dot::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--lime); box-shadow: 0 0 8px var(--lime);
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100% {opacity:1} 50% {opacity:0.35} }
+
+  .dim-switch {
+    display: inline-flex; background: var(--bg-deep);
+    border: 1px solid var(--border-line); border-radius: 8px;
+    padding: 3px;
+  }
+  .dim-switch button {
+    padding: 7px 16px; font-size: 13px; font-family: 'Space Mono', monospace;
+    letter-spacing: 0.1em; color: var(--text-sec); background: transparent;
+    border: none; cursor: pointer; border-radius: 6px; transition: all 0.25s;
+    text-transform: uppercase;
+  }
+  .dim-switch button.active {
+    background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(0,229,255,0.06));
+    color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,0.3), inset 0 0 8px rgba(0,229,255,0.1);
+  }
+  .dim-switch button:hover:not(.active) { color: var(--text-pri); }
+
+  /* ============ Bento 主网格 - 不对称布局 ============ */
+  .bento {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 80px;
+    gap: 14px;
+  }
+
+  /* 通用面板 */
+  .panel {
+    background: linear-gradient(160deg, rgba(19,28,48,0.7), rgba(10,15,28,0.85));
+    border: 1px solid var(--border-line);
+    border-radius: 12px; position: relative; overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .panel:hover { border-color: var(--border-strong); }
+  .panel::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-strong) 30%, var(--border-strong) 70%, transparent);
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 18px;
+  }
+  .panel-title { display: flex; align-items: center; gap: 11px; font-size: 14.5px; letter-spacing: 0.05em; font-weight: 500; }
+  .panel-title-bar { width: 3px; height: 15px; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+  .panel-tag { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text-sec); letter-spacing: 0.12em; }
+  .panel-body { padding: 14px 18px; }
+
+  /* ============ HERO 区 ============ */
+  .hero {
+    grid-column: span 7; grid-row: span 4;
+    padding: 22px 26px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background:
+      radial-gradient(ellipse 60% 80% at 100% 0%, rgba(0,229,255,0.12), transparent 60%),
+      radial-gradient(ellipse 50% 60% at 0% 100%, rgba(139,92,246,0.08), transparent 60%),
+      linear-gradient(160deg, rgba(19,28,48,0.85), rgba(10,15,28,0.9));
+  }
+  .hero-head { display: flex; justify-content: space-between; align-items: flex-start; }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: 'Space Mono', monospace; font-size: 13px;
+    letter-spacing: 0.2em; color: var(--cyan); text-transform: uppercase;
+  }
+  .hero-eyebrow::before {
+    content: ''; width: 28px; height: 1px; background: var(--cyan); box-shadow: 0 0 6px var(--cyan);
+  }
+  .hero-period {
+    font-family: 'Space Mono', monospace; font-size: 13px;
+    color: var(--text-sec); padding: 5px 12px;
+    border: 1px solid var(--border-line); border-radius: 999px;
+  }
+  .hero-main { display: flex; align-items: flex-end; gap: 28px; margin: -8px 0; }
+  .hero-number-wrap { display: flex; flex-direction: column; }
+  .hero-number {
+    font-family: 'Space Mono', monospace; font-weight: 700;
+    font-size: 96px; line-height: 0.95;
+    background: linear-gradient(180deg, #FFFFFF 0%, #00E5FF 80%, #00B8D4 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
+    filter: drop-shadow(0 0 18px rgba(0,229,255,0.4));
+  }
+  .hero-unit {
+    font-family: 'Space Mono', monospace; font-size: 26px;
+    color: var(--text-sec); margin-left: 6px; font-weight: 400;
+  }
+  .hero-label {
+    font-size: 15px; color: var(--text-sec); margin-top: 8px;
+    letter-spacing: 0.08em;
+  }
+  .hero-flow {
+    width: 100%; max-width: 380px; height: 22px; margin-top: 6px;
+    filter: drop-shadow(0 0 6px rgba(0,229,255,0.35));
+  }
+  .hero-trend-mini {
+    flex: 1; height: 80px; min-width: 220px;
+  }
+  .hero-foot {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border-top: 1px solid var(--border-line); padding-top: 16px; margin-top: 8px;
+  }
+  .hero-stat {
+    padding: 0 18px; border-right: 1px solid var(--border-line);
+  }
+  .hero-stat:first-child { padding-left: 0; }
+  .hero-stat:last-child { border-right: none; padding-right: 0; }
+  .hero-stat-label { font-size: 12px; color: var(--text-sec); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
+  .hero-stat-val { font-family: 'Space Mono', monospace; font-size: 24px; color: var(--text-pri); font-weight: 700; }
+  .hero-stat-val .u { font-size: 13px; color: var(--text-sec); font-weight: 400; margin-left: 3px; }
+  .hero-stat-delta { font-family: 'Space Mono', monospace; font-size: 12px; margin-top: 4px; }
+  .delta-up { color: var(--lime); }
+  .delta-down { color: var(--rose); }
+
+  /* ============ 综合能效（横向条 · 降权 · 浮签） ============ */
+  .efficiency {
+    grid-column: span 8; grid-row: span 2;
+    padding: 13px 22px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 9px;
+    background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.6));
+    border-radius: 18px;
+    border: 1px solid rgba(82,196,255,0.08);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+    opacity: 0.92;
+  }
+  .efficiency::before { display: none; }
+  .efficiency:hover {
+    border-color: rgba(82,196,255,0.18);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .eff-row1 { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .eff-label {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 13px; letter-spacing: 0.06em; color: var(--text-sec);
+  }
+  .eff-label-bar { width: 3px; height: 13px; background: var(--text-mute); }
+  .eff-label .aux { font-family: 'Space Mono', monospace; font-size: 10.5px; color: var(--text-mute); margin-left: 6px; letter-spacing: 0.18em; }
+  .eff-main { display: flex; align-items: baseline; gap: 7px; }
+  .eff-val {
+    font-family: 'Space Mono', monospace; font-size: 30px; font-weight: 700;
+    color: var(--text-pri); line-height: 1; letter-spacing: -0.01em;
+  }
+  .eff-unit { font-size: 12.5px; color: var(--text-mute); font-family: 'Space Mono', monospace; letter-spacing: 0.06em; }
+  .eff-bar-wrap {
+    height: 5px; background: rgba(82,196,255,0.06);
+    border-radius: 3px; overflow: hidden;
+  }
+  .eff-bar {
+    height: 100%; background: linear-gradient(90deg, var(--text-mute), #7E8DAB);
+    border-radius: 3px; transition: width 0.8s ease-out;
+  }
+  .eff-chart-wrap {
+    flex: 1; min-height: 0; position: relative;
+    margin: -2px 0;
+  }
+  .eff-chart { width: 100%; height: 100%; }
+  .eff-row2 {
+    display: flex; gap: 22px; align-items: center;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    color: var(--text-mute); flex-wrap: wrap;
+  }
+  .eff-row2 > span { display: inline-flex; align-items: center; gap: 5px; }
+  .eff-row2 b { color: var(--text-sec); font-weight: 700; margin: 0 3px; }
+
+  /* ============ 浮签 Pill 基类 ============ */
+  .panel.pill {
+    background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.6));
+    border: 1px solid rgba(82,196,255,0.09);
+    border-radius: 18px;
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.28),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .panel.pill::before { display: none; }
+  .panel.pill:hover {
+    border-color: rgba(82,196,255,0.22);
+    box-shadow:
+      0 12px 32px rgba(0,0,0,0.38),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .pill-eyebrow {
+    font-family: 'Space Mono', monospace; font-size: 10.5px;
+    color: var(--text-mute); letter-spacing: 0.2em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pill-eyebrow::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text-sec); box-shadow: 0 0 6px var(--text-sec);
+  }
+
+  /* ============ 车队状态 浮签 ============ */
+  .fleet-status {
+    grid-column: span 2; grid-row: span 2;
+    padding: 14px 16px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+    background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.6));
+  }
+  .fleet-pill-main { display: flex; flex-direction: column; gap: 9px; }
+  .fleet-pill-big {
+    font-family: 'Space Mono', monospace; font-size: 44px; font-weight: 700;
+    color: var(--lime); line-height: 1; letter-spacing: -0.02em;
+    filter: drop-shadow(0 0 10px rgba(182,255,61,0.4));
+  }
+  .fleet-pill-big .total { font-size: 16px; color: var(--text-sec); margin-left: 2px; font-weight: 400; }
+  .fleet-pill-pct {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--text-sec);
+  }
+  .fleet-pill-pct b { color: var(--lime); font-weight: 700; font-size: 14px; }
+  .fleet-pill-bar {
+    height: 4px; background: rgba(82,196,255,0.06);
+    border-radius: 2px; overflow: hidden;
+  }
+  .fleet-pill-bar-fill {
+    height: 100%; background: var(--lime); box-shadow: 0 0 6px var(--lime);
+    border-radius: 2px; transition: width 0.8s ease-out;
+  }
+
+  /* ============ 安全事件 浮签 ============ */
+  .safety-block {
+    grid-column: span 2; grid-row: span 2;
+    padding: 14px 16px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.6));
+  }
+  .safety-pill-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .safety-pill-cell { display: flex; flex-direction: column; gap: 4px; }
+  .safety-pill-label {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--text-mute); letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .safety-pill-val {
+    font-family: 'Space Mono', monospace; font-size: 32px; font-weight: 700;
+    line-height: 1; letter-spacing: -0.02em;
+  }
+  .safety-pill-val.alert { color: var(--rose); filter: drop-shadow(0 0 8px rgba(255,84,112,0.4)); }
+  .safety-pill-val.takeover { color: var(--teal); filter: drop-shadow(0 0 8px rgba(46,230,197,0.4)); }
+  .safety-pill-trend { font-family: 'Space Mono', monospace; font-size: 11px; }
+  .safety-pill-trend.up { color: var(--rose); }
+  .safety-pill-trend.down { color: var(--lime); }
+
+  /* ============ 项目任务完成情况 ============ */
+  .task-panel {
+    grid-column: span 5; grid-row: span 4;
+    display: flex; flex-direction: column;
+  }
+  .task-panel .panel-body {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 14px 18px 16px; min-height: 0;
+  }
+  .task-overview {
+    display: grid; grid-template-columns: auto 1fr; gap: 18px;
+    align-items: center; padding-bottom: 12px;
+    border-bottom: 1px dashed rgba(82,196,255,0.1);
+  }
+  .task-rate-label { font-size: 11.5px; color: var(--text-sec); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px; }
+  .task-rate { display: flex; align-items: baseline; gap: 3px; }
+  .task-rate-num {
+    font-family: 'Space Mono', monospace; font-weight: 700;
+    font-size: 44px; line-height: 1; letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #FFFFFF 0%, #00E5FF 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(0,229,255,0.28));
+  }
+  .task-rate-unit { font-family: 'Space Mono', monospace; font-size: 20px; color: var(--text-sec); }
+  .task-count { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text-sec); }
+  .task-count b { color: var(--text-pri); font-size: 20px; font-weight: 700; }
+  .task-count .sep { color: var(--text-mute); margin: 0 4px; }
+  .task-count .total { color: var(--text-sec); }
+  .task-delta { font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--lime); margin-top: 5px; letter-spacing: 0.04em; }
+  .task-projects {
+    flex: 1; min-height: 0; padding-top: 12px;
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .task-proj-head {
+    display: flex; justify-content: space-between;
+    font-size: 10.5px; color: var(--text-mute); letter-spacing: 0.16em;
+    text-transform: uppercase; margin-bottom: 3px;
+  }
+  .task-proj {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 4px 10px; align-items: center;
+  }
+  .task-proj-name {
+    font-size: 12.5px; color: var(--text-pri);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .task-proj-name i { width: 7px; height: 7px; border-radius: 50%; }
+  .task-proj-meta {
+    font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text-sec);
+  }
+  .task-proj-meta b { color: var(--text-pri); font-weight: 700; }
+  .task-proj-meta .pct { margin-left: 8px; }
+  .task-proj-bar-wrap {
+    grid-column: 1 / -1; height: 4px; background: rgba(82,196,255,0.06);
+    border-radius: 2px; overflow: hidden;
+  }
+  .task-proj-bar {
+    height: 100%; border-radius: 2px; transition: width 0.8s ease-out;
+  }
+
+  /* ============ 资源节奏（横向时间条） ============ */
+  .resource-rhythm {
+    grid-column: 6 / span 7; grid-row: 7 / span 4;
+  }
+  .resource-track {
+    margin-bottom: 12px;
+  }
+  .resource-track:last-child { margin-bottom: 0; }
+  .resource-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; }
+  .resource-meta .name { color: var(--text-pri); display: flex; align-items: center; gap: 7px; font-weight: 500; }
+  .resource-meta .name i { width: 8px; height: 8px; border-radius: 50%; }
+  .resource-meta .count { font-family: 'Space Mono', monospace; color: var(--text-sec); font-size: 12.5px; }
+  .resource-meta .count b { color: var(--text-pri); font-weight: 700; }
+  .resource-timeline {
+    height: 30px; background: rgba(82,196,255,0.04);
+    border-radius: 4px; position: relative; overflow: hidden;
+    border: 1px solid rgba(82,196,255,0.06);
+  }
+  .resource-tick {
+    position: absolute; top: 3px; bottom: 3px; width: 3px;
+    border-radius: 1px; background: var(--c, var(--cyan));
+    box-shadow: 0 0 6px var(--c, var(--cyan));
+    transition: opacity 0.3s;
+  }
+  .resource-timeline::before, .resource-timeline::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 1px;
+    background: rgba(82,196,255,0.1);
+  }
+  .resource-timeline::before { left: 25%; }
+  .resource-timeline::after { left: 75%; }
+  .resource-axis {
+    display: flex; justify-content: space-between;
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: var(--text-sec); margin-top: 5px;
+  }
+  /* 累计维度：隐藏 24h 时间条，仅留 KPI */
+  .resource-rhythm.dim-total .resource-timeline,
+  .resource-rhythm.dim-total .resource-axis { display: none; }
+  .resource-rhythm.dim-total .resource-track {
+    margin-bottom: 4px;
+    padding: 7px 0;
+    border-bottom: 1px dashed rgba(82,196,255,0.08);
+  }
+  .resource-rhythm.dim-total .resource-track:last-child { border-bottom: none; }
+  .resource-rhythm.dim-total .resource-meta .name { font-size: 14px; }
+  .resource-rhythm.dim-total .resource-meta .count b { font-size: 16px; }
+  .resource-insights {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-line);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .ri-item { display: flex; flex-direction: column; gap: 5px; }
+  .ri-label { font-size: 11.5px; color: var(--text-sec); letter-spacing: 0.1em; }
+  .ri-val { font-family: 'Space Mono', monospace; font-size: 17px; color: var(--text-pri); font-weight: 700; }
+  .ri-val span { font-size: 11px; color: var(--text-sec); font-weight: 400; margin-left: 2px; }
+
+  /* ============ 事件流 ============ */
+  .events {
+    grid-column: 1 / span 5; grid-row: 7 / span 4;
+  }
+  .events .panel-body { padding: 12px 18px 14px; }
+  /* ============ 事件流（竖向 list） ============ */
+  .event-list {
+    max-height: 280px; overflow-y: auto; padding-right: 6px;
+  }
+  .event-list::-webkit-scrollbar { width: 4px; }
+  .event-list::-webkit-scrollbar-track { background: transparent; }
+  .event-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  .event-row {
+    display: flex; gap: 11px; padding: 9px 0;
+    border-bottom: 1px dashed rgba(82,196,255,0.08);
+    animation: slide-in 0.4s ease-out;
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .event-time {
+    font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text-sec);
+    min-width: 60px; padding-top: 3px;
+  }
+  .event-icon {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center; flex-shrink: 0;
+    border: 1px solid var(--ec, var(--cyan));
+    background: color-mix(in srgb, var(--ec, var(--cyan)) 12%, transparent);
+    color: var(--ec, var(--cyan)); font-size: 12px;
+  }
+  .event-body { flex: 1; min-width: 0; }
+  .event-title { font-size: 13.5px; color: var(--text-pri); margin-bottom: 3px; font-weight: 500; }
+  .event-meta { font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--text-sec); }
+
+  /* 角标装饰 */
+  .corner { position: absolute; width: 9px; height: 9px; border: 1px solid var(--cyan); opacity: 0.45; pointer-events: none; }
+  .corner.tl { top: 5px; left: 5px; border-right: none; border-bottom: none; }
+  .corner.tr { top: 5px; right: 5px; border-left: none; border-bottom: none; }
+  .corner.bl { bottom: 5px; left: 5px; border-right: none; border-top: none; }
+  .corner.br { bottom: 5px; right: 5px; border-left: none; border-top: none; }
+
+  /* 扫描线 */
+  .scanline {
+    position: absolute; left: 0; right: 0; height: 50px;
+    background: linear-gradient(180deg, transparent, rgba(0,229,255,0.05), transparent);
+    pointer-events: none; animation: scan 9s linear infinite;
+  }
+  @keyframes scan { 0% { top: -50px; } 100% { top: 100%; } }
+
+  .reveal { animation: reveal-up 0.6s ease-out backwards; }
+  @keyframes reveal-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ 二级弹窗 Modal ============ */
+  .modal-mask {
+    position: fixed; inset: 0;
+    background: rgba(5,8,16,0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 100;
+    display: grid; place-items: center;
+    opacity: 0;
+    transition: opacity 0.22s ease-out;
+    padding: 24px;
+  }
+  .modal-mask.open { opacity: 1; }
+  .modal-mask[hidden] { display: none; }
+  .modal-card {
+    width: 100%; max-width: 1100px;
+    max-height: 88vh; overflow-y: auto;
+    background: linear-gradient(160deg, rgba(19,28,48,0.95), rgba(10,15,28,0.98));
+    border: 1px solid rgba(82,196,255,0.28);
+    border-radius: 16px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 60px rgba(0,229,255,0.12);
+    transform: scale(0.96) translateY(8px);
+    opacity: 0;
+    transition: transform 0.25s ease-out, opacity 0.22s ease-out;
+    position: relative;
+  }
+  .modal-mask.open .modal-card { transform: scale(1) translateY(0); opacity: 1; }
+  .modal-card::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan) 30%, var(--cyan) 70%, transparent);
+    opacity: 0.6;
+  }
+  .modal-head {
+    position: sticky; top: 0; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    background: linear-gradient(180deg, rgba(14,21,37,0.96), rgba(14,21,37,0.82));
+    border-bottom: 1px solid var(--border-line);
+    backdrop-filter: blur(8px);
+  }
+  .modal-title-wrap { display: flex; align-items: center; gap: 14px; }
+  .modal-title-bar { width: 4px; height: 28px; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); border-radius: 2px; }
+  .modal-title { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: 0.06em; color: var(--text-pri); }
+  .modal-subtitle { font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--text-sec); letter-spacing: 0.1em; margin-top: 3px; }
+  .modal-head-right { display: flex; align-items: center; gap: 14px; }
+  .modal-dim-switch button { padding: 5px 12px; font-size: 11.5px; }
+  .modal-close {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: rgba(255,84,112,0.08); border: 1px solid rgba(255,84,112,0.3);
+    color: var(--rose); cursor: pointer; display: grid; place-items: center;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: rgba(255,84,112,0.18); box-shadow: 0 0 12px rgba(255,84,112,0.3); }
+  .modal-close svg { width: 18px; height: 18px; }
+  .modal-body { padding: 22px 24px 26px; }
+
+  /* KPI Row */
+  .modal-kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    margin-bottom: 20px;
+  }
+  .modal-kpi {
+    padding: 14px 16px;
+    background: linear-gradient(160deg, rgba(19,28,48,0.6), rgba(10,15,28,0.5));
+    border: 1px solid var(--border-line);
+    border-radius: 10px;
+    position: relative; overflow: hidden;
+  }
+  .modal-kpi::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--kc, var(--cyan)); box-shadow: 0 0 8px var(--kc, var(--cyan));
+  }
+  .modal-kpi-label { font-size: 11px; color: var(--text-sec); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
+  .modal-kpi-val { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 24px; color: var(--text-pri); letter-spacing: -0.01em; }
+  .modal-kpi-val .u { font-size: 12px; color: var(--text-sec); font-weight: 400; margin-left: 3px; }
+  .modal-kpi-sub { font-size: 11px; color: var(--text-mute); margin-top: 4px; font-family: 'Space Mono', monospace; }
+
+  /* 左右分栏 */
+  .modal-grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 20px; }
+  .modal-grid-2.even { grid-template-columns: 1fr 1fr; }
+  .modal-sub-panel {
+    background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.5));
+    border: 1px solid var(--border-line);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .modal-sub-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .modal-sub-title { font-size: 13px; color: var(--text-pri); font-weight: 500; letter-spacing: 0.04em; display: flex; align-items: center; gap: 8px; }
+  .modal-sub-title i { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
+  .modal-sub-tag { font-family: 'Space Mono', monospace; font-size: 10.5px; color: var(--text-mute); letter-spacing: 0.12em; }
+  .modal-chart { width: 100%; height: 200px; }
+
+  /* Tab 切换 */
+  .modal-tabs {
+    display: inline-flex; background: var(--bg-deep);
+    border: 1px solid var(--border-line); border-radius: 8px;
+    padding: 3px; margin-bottom: 16px; flex-wrap: wrap; gap: 2px;
+  }
+  .modal-tab {
+    padding: 6px 14px; font-size: 12.5px; font-family: 'Space Mono', monospace;
+    letter-spacing: 0.06em; color: var(--text-sec); background: transparent;
+    border: none; cursor: pointer; border-radius: 6px; transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .modal-tab.active {
+    background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(0,229,255,0.06));
+    color: var(--cyan); box-shadow: 0 0 10px rgba(0,229,255,0.25);
+  }
+  .modal-tab:hover:not(.active) { color: var(--text-pri); }
+
+  /* 明细表格 */
+  .modal-table-wrap {
+    background: linear-gradient(160deg, rgba(19,28,48,0.45), rgba(10,15,28,0.5));
+    border: 1px solid var(--border-line); border-radius: 10px;
+    overflow: hidden;
+  }
+  .modal-table-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border-line);
+  }
+  .modal-table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+  }
+  .modal-table thead th {
+    padding: 10px 14px; text-align: left;
+    color: var(--text-mute); font-weight: 400; letter-spacing: 0.12em;
+    text-transform: uppercase; font-size: 10.5px;
+    border-bottom: 1px solid var(--border-line);
+    background: rgba(82,196,255,0.03);
+  }
+  .modal-table tbody td {
+    padding: 10px 14px; color: var(--text-pri);
+    border-bottom: 1px dashed rgba(82,196,255,0.08);
+  }
+  .modal-table tbody tr:last-child td { border-bottom: none; }
+  .modal-table tbody tr:hover td { background: rgba(82,196,255,0.04); }
+  .modal-table .mute { color: var(--text-mute); }
+  .modal-table .sec { color: var(--text-sec); }
+
+  /* 状态徽标 */
+  .pill-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 9px; border-radius: 999px;
+    font-size: 10.5px; letter-spacing: 0.08em;
+    font-family: 'Space Mono', monospace; border: 1px solid;
+  }
+  .pill-tag::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor; box-shadow: 0 0 4px currentColor;
+  }
+  .pill-tag.work    { color: var(--cyan);  background: rgba(0,229,255,0.08); border-color: rgba(0,229,255,0.3); }
+  .pill-tag.charge  { color: var(--amber); background: rgba(255,181,70,0.08); border-color: rgba(255,181,70,0.3); }
+  .pill-tag.idle    { color: var(--text-sec); background: rgba(176,192,220,0.06); border-color: rgba(176,192,220,0.2); }
+  .pill-tag.offline { color: var(--rose);  background: rgba(255,84,112,0.08); border-color: rgba(255,84,112,0.3); }
+  .pill-tag.alert   { color: var(--rose);  background: rgba(255,84,112,0.08); border-color: rgba(255,84,112,0.3); }
+  .pill-tag.takeover{ color: var(--teal);  background: rgba(46,230,197,0.08); border-color: rgba(46,230,197,0.3); }
+  .pill-tag.event   { color: var(--violet);background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.3); }
+  .pill-tag.done    { color: var(--lime);  background: rgba(182,255,61,0.08); border-color: rgba(182,255,61,0.3); }
+  .pill-tag.processing { color: var(--amber); background: rgba(255,181,70,0.08); border-color: rgba(255,181,70,0.3); }
+  .pill-tag.todo    { color: var(--text-mute); background: rgba(126,141,171,0.08); border-color: rgba(126,141,171,0.25); }
+
+  /* 子任务进度 */
+  .subtask-row {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 12px; align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px dashed rgba(82,196,255,0.08);
+  }
+  .subtask-row:last-child { border-bottom: none; }
+  .subtask-name { font-size: 13px; color: var(--text-pri); }
+  .subtask-bar-wrap {
+    grid-column: 1 / -1; height: 4px;
+    background: rgba(82,196,255,0.06); border-radius: 2px; overflow: hidden;
+  }
+  .subtask-bar { height: 100%; border-radius: 2px; transition: width 0.6s ease-out; }
+  .subtask-meta { font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--text-sec); }
+
+  /* 面板 hover 角标 */
+  .panel[data-modal] { cursor: pointer; }
+  .panel[data-modal] .panel-cue {
+    position: absolute; top: 10px; right: 12px;
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--text-mute); letter-spacing: 0.16em;
+    opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; z-index: 3;
+  }
+  .panel[data-modal]:hover .panel-cue { opacity: 0.7; }
+  .panel.pill[data-modal] .panel-cue { top: 8px; right: 10px; }
+
+  /* 响应式：折叠为单列 */
+  @media (max-width: 1280px) {
+    .hero { grid-column: span 12; grid-row: span 4; }
+    .task-panel { grid-column: span 12; }
+    .efficiency { grid-column: span 12; grid-row: span 2; }
+    .fleet-status { grid-column: span 6; grid-row: span 2; }
+    .safety-block { grid-column: span 6; grid-row: span 2; }
+    .resource-rhythm { grid-column: span 12; }
+    .events { grid-column: span 12; }
+  }
+  @media (max-width: 768px) {
+    .hero-number { font-size: 60px; }
+    .status-cluster { display: none; }
+    .bento { grid-template-columns: 1fr; }
+    .bento > * { grid-column: span 1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ====================== 顶栏 ====================== -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" data-overlay>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 L4 7 V17 L12 22 L20 17 V7 Z"/>
+          <path d="M12 6 L8 8.5 V13.5 L12 16 L16 13.5 V8.5 Z"/>
+          <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">CITIBOT-OPS</div>
+        <div class="brand-sub">无人清扫车 · 运营驾驶舱 / v3.2</div>
+      </div>
+    </div>
+
+    <div class="status-cluster">
+      <div class="status-item">
+        <span class="status-label">SYSTEM TIME</span>
+        <span class="status-val" id="clock">--:--:--</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">DATA LATENCY</span>
+        <span class="status-val" style="color:var(--cyan)">42 ms</span>
+      </div>
+      <span class="live-dot">LIVE TELEMETRY</span>
+    </div>
+
+    <div class="dim-switch" id="dimSwitch">
+      <button data-dim="day" class="active">当天</button>
+      <button data-dim="total">累计</button>
+    </div>
+  </header>
+
+  <!-- ====================== Bento 主网格 ====================== -->
+  <div class="bento" id="bento">
+
+    <!-- HERO: 今日清扫里程 -->
+    <div class="panel hero reveal" style="animation-delay:0s">
+      <span data-overlay class="corner tl"></span><span data-overlay class="corner tr"></span>
+      <span data-overlay class="corner bl"></span><span data-overlay class="corner br"></span>
+      <div class="hero-head">
+        <span class="hero-eyebrow">CORE OUTPUT · 核心产出</span>
+        <span class="hero-period" id="heroPeriod">今日 · 2026-06-16</span>
+      </div>
+
+      <div class="hero-main">
+        <div class="hero-number-wrap">
+          <div>
+            <span class="hero-number" id="heroNum">0</span><span class="hero-unit">km</span>
+          </div>
+          <svg class="hero-flow" data-overlay viewBox="0 0 400 22" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="heroFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00E5FF" stop-opacity="0"/>
+                <stop offset="30%" stop-color="#00E5FF" stop-opacity="0.45"/>
+                <stop offset="70%" stop-color="#00E5FF" stop-opacity="0.45"/>
+                <stop offset="100%" stop-color="#00E5FF" stop-opacity="0"/>
+              </linearGradient>
+              <filter id="heroFlowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="1.4" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <path id="heroFlowPath" d="M0,11 Q40,3 80,11 T160,11 T240,11 T320,11 T400,11"
+                  fill="none" stroke="url(#heroFlowGrad)" stroke-width="1.2"/>
+            <circle r="2.4" fill="#00E5FF" filter="url(#heroFlowGlow)">
+              <animateMotion dur="3.2s" repeatCount="indefinite" begin="0s">
+                <mpath href="#heroFlowPath"/>
+              </animateMotion>
+            </circle>
+            <circle r="1.8" fill="#7CF6FF" filter="url(#heroFlowGlow)">
+              <animateMotion dur="3.2s" repeatCount="indefinite" begin="0.8s">
+                <mpath href="#heroFlowPath"/>
+              </animateMotion>
+            </circle>
+            <circle r="2.1" fill="#00E5FF" filter="url(#heroFlowGlow)">
+              <animateMotion dur="3.2s" repeatCount="indefinite" begin="1.6s">
+                <mpath href="#heroFlowPath"/>
+              </animateMotion>
+            </circle>
+            <circle r="1.5" fill="#B6FF3D" filter="url(#heroFlowGlow)" opacity="0.8">
+              <animateMotion dur="3.2s" repeatCount="indefinite" begin="2.4s">
+                <mpath href="#heroFlowPath"/>
+              </animateMotion>
+            </circle>
+          </svg>
+          <div class="hero-label">累计清扫里程 / Sweep Distance</div>
+        </div>
+        <div class="hero-trend-mini" id="heroTrend"></div>
+      </div>
+
+      <div class="hero-foot">
+        <div class="hero-stat">
+          <div class="hero-stat-label">清扫时长</div>
+          <div class="hero-stat-val"><span id="hs1">0</span><span class="u">h</span></div>
+          <div class="hero-stat-delta delta-up" id="hd1">▲ +11%</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">平均速度</div>
+          <div class="hero-stat-val"><span id="hs2">0</span><span class="u">km/h</span></div>
+          <div class="hero-stat-delta delta-up" id="hd2">▲ +6%</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">自驾 : 清扫</div>
+          <div class="hero-stat-val"><span id="hs3">0</span></div>
+          <div class="hero-stat-delta" style="color:var(--text-sec)" id="hd3">作业占比 74%</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label" id="hs4Label">vs 昨日同时段</div>
+          <div class="hero-stat-val delta-up" id="hs4">+13%</div>
+          <div class="hero-stat-delta" style="color:var(--text-sec)" id="hd4">截至 14:32 · +9.0 km</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 项目任务完成情况 -->
+    <div class="panel task-panel reveal" data-modal="task" style="animation-delay:0.08s">
+      <span data-overlay class="corner tl"></span><span data-overlay class="corner tr"></span>
+      <span data-overlay class="corner bl"></span><span data-overlay class="corner br"></span>
+      <span class="panel-cue">详情 ↗</span>
+      <div class="panel-head">
+        <div class="panel-title">
+          <span class="panel-title-bar"></span>
+          项目任务完成情况
+        </div>
+        <span class="panel-tag" id="taskTag">5 个项目 · 在执行</span>
+      </div>
+      <div class="panel-body">
+        <div class="task-overview">
+          <div>
+            <div class="task-rate-label">综合完成率</div>
+            <div class="task-rate">
+              <span class="task-rate-num" id="taskRate">0</span>
+              <span class="task-rate-unit">%</span>
+            </div>
+          </div>
+          <div class="task-count">
+            <span>已完成</span>
+            <b id="taskDone">0</b><span class="sep">/</span><span class="total" id="taskTotal">0</span>
+            <div class="task-delta" id="taskDelta">▲ +0 vs 昨日</div>
+          </div>
+        </div>
+        <div class="task-projects">
+          <div class="task-proj-head">
+            <span>项目进度</span>
+            <span>完成 / 总数 · 百分比</span>
+          </div>
+          <div id="taskProjList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 车队状态 浮签 -->
+    <div class="panel pill fleet-status reveal" data-modal="fleet" style="animation-delay:0.12s">
+      <span class="panel-cue">详情 ↗</span>
+      <div class="pill-eyebrow">FLEET · 在线</div>
+      <div class="fleet-pill-main">
+        <div class="fleet-pill-big" id="fleetOnline">0<span class="total">/14</span></div>
+        <div>
+          <div class="fleet-pill-pct"><span>在线率</span><b id="fleetPct">0%</b></div>
+          <div class="fleet-pill-bar"><div class="fleet-pill-bar-fill" id="fleetBar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 安全事件 浮签 -->
+    <div class="panel pill safety-block reveal" data-modal="safety" style="animation-delay:0.16s">
+      <span class="panel-cue">详情 ↗</span>
+      <div class="pill-eyebrow">SAFETY · 24h</div>
+      <div class="safety-pill-grid" style="grid-template-columns:1fr 1fr;gap:8px">
+        <div class="safety-pill-cell">
+          <div class="safety-pill-label">SD15 · 告警</div>
+          <div class="safety-pill-val alert" id="safetySd15Alert" style="font-size:26px">0</div>
+          <div class="safety-pill-trend up" id="safetySd15AlertTrend">▲ +1 vs 昨</div>
+        </div>
+        <div class="safety-pill-cell">
+          <div class="safety-pill-label">SD15 · 接管</div>
+          <div class="safety-pill-val takeover" id="safetySd15Takeover" style="font-size:26px">0</div>
+          <div class="safety-pill-trend down" id="safetySd15TakeoverTrend">▼ -1 vs 昨</div>
+        </div>
+        <div class="safety-pill-cell">
+          <div class="safety-pill-label">SD22C · 告警</div>
+          <div class="safety-pill-val alert" id="safetySd22cAlert" style="font-size:26px">0</div>
+          <div class="safety-pill-trend up" id="safetySd22cAlertTrend">▲ +1 vs 昨</div>
+        </div>
+        <div class="safety-pill-cell">
+          <div class="safety-pill-label">SD22C · 接管</div>
+          <div class="safety-pill-val takeover" id="safetySd22cTakeover" style="font-size:26px">0</div>
+          <div class="safety-pill-trend down" id="safetySd22cTakeoverTrend">▼ -1 vs 昨</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 综合能效（横向条 · 降权 · 浮签 · 次要指标） -->
+    <div class="panel pill efficiency reveal" data-modal="efficiency" style="animation-delay:0.2s">
+      <span data-overlay class="corner tl"></span><span data-overlay class="corner br"></span>
+      <span class="panel-cue">详情 ↗</span>
+      <div class="eff-row1">
+        <div class="eff-label">
+          <span class="eff-label-bar"></span>
+          百公里能耗
+          <span class="aux">// kWh/100km</span>
+        </div>
+        <div class="eff-main" style="gap:18px">
+          <span style="font-size:12px;color:var(--text-mute);font-family:'Space Mono',monospace">SD15</span>
+          <span class="eff-val" id="effValSD15" style="font-size:24px;color:#00E5FF">0</span>
+          <span style="font-size:12px;color:var(--text-mute);font-family:'Space Mono',monospace;margin-left:8px">SD22C</span>
+          <span class="eff-val" id="effValSD22C" style="font-size:24px;color:#FFB546">0</span>
+          <span class="eff-unit">kWh / 100km</span>
+        </div>
+      </div>
+      <div class="eff-chart-wrap">
+        <div id="effChart" class="eff-chart"></div>
+      </div>
+      <div class="eff-row2">
+        <span>总耗电<b id="effPower">0</b>kWh</span>
+        <span>自驾占比<b id="effRatio">0</b>%</span>
+        <span style="margin-left:auto;color:var(--text-mute)">越低越优 · 白线为各车型基准</span>
+      </div>
+    </div>
+
+    <!-- 资源补给节奏 -->
+    <div class="panel resource-rhythm reveal" data-modal="resource" style="animation-delay:0.28s">
+      <span data-overlay class="corner tl"></span><span data-overlay class="corner br"></span>
+      <span class="panel-cue">详情 ↗</span>
+      <div class="panel-head">
+        <div class="panel-title">
+          <span class="panel-title-bar" style="background:var(--violet);box-shadow:0 0 6px var(--violet)"></span>
+          资源补给节奏 · 24h 分布
+        </div>
+        <span class="panel-tag">点击条目高亮</span>
+      </div>
+      <div class="panel-body" style="padding-top:8px">
+        <div class="resource-track">
+          <div class="resource-meta">
+            <span class="name"><i style="background:var(--lime);box-shadow:0 0 4px var(--lime)"></i>充电</span>
+            <span class="count"><b id="rcCharge">23</b> 次 · 累计 <b id="rkCharge">0</b> kWh</span>
+          </div>
+          <div class="resource-timeline" id="tlCharge"></div>
+        </div>
+        <div class="resource-track">
+          <div class="resource-meta">
+            <span class="name"><i style="background:#4FC3F7;box-shadow:0 0 4px #4FC3F7"></i>加水</span>
+            <span class="count"><b id="rcWater">31</b> 次 · 累计 <b id="rkWater">0</b> L</span>
+          </div>
+          <div class="resource-timeline" id="tlWater"></div>
+        </div>
+        <div class="resource-track">
+          <div class="resource-meta">
+            <span class="name"><i style="background:var(--violet);box-shadow:0 0 4px var(--violet)"></i>倒垃圾</span>
+            <span class="count"><b id="rcTrash">14</b> 次 · 容量恢复 <b id="rkTrash">0</b><span id="ruTrash">%</span></span>
+          </div>
+          <div class="resource-timeline" id="tlTrash"></div>
+        </div>
+        <div class="resource-axis">
+          <span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>
+        </div>
+
+        <div class="resource-insights" id="resourceInsights">
+          <div class="ri-item">
+            <div class="ri-label">高峰补给时段</div>
+            <div class="ri-val">08:00 — 10:00</div>
+          </div>
+          <div class="ri-item">
+            <div class="ri-label">平均补给间隔</div>
+            <div class="ri-val">47<span>min</span></div>
+          </div>
+          <div class="ri-item">
+            <div class="ri-label">节奏效率</div>
+            <div class="ri-val" style="color:var(--lime)">A</div>
+          </div>
+          <div class="ri-item">
+            <div class="ri-label">异常聚集</div>
+            <div class="ri-val" style="color:var(--amber)">2<span>处</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 事件流 -->
+    <div class="panel events reveal" style="animation-delay:0.32s">
+      <span data-overlay class="corner tl"></span><span data-overlay class="corner br"></span>
+      <div class="panel-head">
+        <div class="panel-title">
+          <span class="panel-title-bar" style="background:var(--rose);box-shadow:0 0 6px var(--rose)"></span>
+          实时事件流
+        </div>
+        <span class="panel-tag">最近 24h</span>
+      </div>
+      <div class="panel-body">
+        <div class="event-list" id="eventList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================== 二级弹窗 ====================== -->
+<div class="modal-mask" id="modalMask" hidden>
+  <div class="modal-card" id="modalCard" role="dialog" aria-modal="true">
+    <header class="modal-head">
+      <div class="modal-title-wrap">
+        <span class="modal-title-bar"></span>
+        <div class="modal-title-text">
+          <div class="modal-title" id="modalTitle"></div>
+          <div class="modal-subtitle" id="modalSubtitle"></div>
+        </div>
+      </div>
+      <div class="modal-head-right">
+        <div class="dim-switch modal-dim-switch" id="modalDimSwitch" data-overlay>
+          <button data-dim="day" class="active">当天</button>
+          <button data-dim="total">累计</button>
+        </div>
+        <button class="modal-close" id="modalClose" aria-label="关闭" data-overlay>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   数据集
+   ============================================================ */
+const DATASET = {
+  day: {
+    periodLabel: '今日 · 2026-06-16 · 截至 14:32',
+    currentTime: '14:32',
+    hero: {
+      sweepDist: 76.1, sweepTime: 5.4, avgSpeed: 5.2,
+      driveRatio: '1.48 : 1', workShare: 74,
+      vsYesterdayPct: '+13%',
+      vsYesterdayAbs: '+9.0 km',
+      vsYesterdayTime: '14:32',
+      vsYesterdayLabel: 'vs 昨日同时段'
+    },
+    efficiency: { kwhPer100km: 28.0, totalPower: 612.4, driveShare: 36.9, sd15: 22.5, sd22c: 33.2, baselineSd15: 22, baselineSd22c: 30, baselineTotal: 26 },
+    fleet: { online: 13, offline: 1, total: 14 },
+    safety: { alert: 7, takeover: 3, sd15: { alert: 3, takeover: 1 }, sd22c: { alert: 4, takeover: 2 } },
+    trend: {
+      hours: ['00','02','04','06','08','10','12','14','16','18','20','22'],
+      drive: [3.2, 2.8, 4.4, 12.1, 18.6, 22.4, 19.8, 16.2, null, null, null, null],
+      sweep: [2.1, 1.8, 3.2, 9.8, 14.2, 17.5, 15.1, 12.4, null, null, null, null],
+      yesterdayDrive: [2.8, 2.4, 3.8, 10.5, 16.2, 19.8, 17.5, 14.2, 15.5, 12.8, 7.2, 2.4],
+      yesterdaySweep: [1.8, 1.6, 2.8, 8.2, 12.8, 15.5, 13.4, 11.0, 12.8, 10.5, 5.8, 1.2]
+    },
+    tasks: {
+      rate: 87.5, done: 248, total: 283, deltaYesterday: 12, projectCount: 5,
+      projects: [
+        { name: '黄埔滨江改造段',   done: 41, total: 50, color: '#00E5FF' },
+        { name: '浦东主干道清扫',   done: 58, total: 64, color: '#B6FF3D' },
+        { name: '徐汇商圈夜间保洁', done: 35, total: 47, color: '#FFB546' },
+        { name: '静安寺周边网格',   done: 32, total: 32, color: '#B6FF3D' },
+        { name: '长宁商务区巡扫',   done: 28, total: 45, color: '#FF5470' }
+      ]
+    },
+    resources: {
+      charge: { count: 23, total: 1842, marks: [8,15,22,29,36,42,48,55,61,67,72,78,83,88,92,96,12,18,25,33,45,58,71] },
+      water:  { count: 31, total: 2148, marks: [10,18,26,33,40,46,52,58,64,70,76,82,87,92,14,22,30,38,44,50,56,63,69,75,81,86,20,35,55,80,90] },
+      trash:  { count: 14, total: 88, marks: [12,28,42,55,68,78,86,18,38,58,72,82,32,62] }
+    },
+    detail: {
+      efficiency: {
+        driveShareSD15: 34.2,
+        driveShareSD22C: 39.5,
+        compositionSD15: [
+          { name: '驱动能耗', value: 98, color: '#00E5FF' },
+          { name: '清扫能耗', value: 82, color: '#FFB546' },
+          { name: '辅助系统', value: 38, color: '#2EE6C5' },
+          { name: '待机能耗', value: 32, color: '#8B5CF6' }
+        ],
+        compositionSD22C: [
+          { name: '驱动能耗', value: 147, color: '#00E5FF' },
+          { name: '清扫能耗', value: 98, color: '#FFB546' },
+          { name: '辅助系统', value: 59, color: '#2EE6C5' },
+          { name: '待机能耗', value: 58, color: '#8B5CF6' }
+        ],
+        trend7d: {
+          days: ['6/10','6/11','6/12','6/13','6/14','6/15','6/16'],
+          sd15:  [23.2, 22.8, 21.5, 22.1, 23.5, 22.0, 22.5],
+          sd22c: [32.5, 31.8, 33.0, 34.2, 32.1, 33.5, 33.2],
+          total: [27.5, 27.0, 26.8, 27.6, 27.9, 27.2, 28.0]
+        },
+        composition: [
+          { name: '驱动能耗', value: 245, color: '#00E5FF' },
+          { name: '清扫能耗', value: 180, color: '#FFB546' },
+          { name: '辅助系统', value: 97,  color: '#2EE6C5' },
+          { name: '待机能耗', value: 90,  color: '#8B5CF6' }
+        ],
+        vehicles: [
+          { id: 'VHC-01', model: 'SD15',  kwh100: 19.5, total: 32.8 },
+          { id: 'VHC-02', model: 'SD15',  kwh100: 21.0, total: 36.2 },
+          { id: 'VHC-03', model: 'SD15',  kwh100: 22.3, total: 41.5 },
+          { id: 'VHC-04', model: 'SD15',  kwh100: 20.8, total: 38.4 },
+          { id: 'VHC-05', model: 'SD15',  kwh100: 23.5, total: 43.2 },
+          { id: 'VHC-06', model: 'SD15',  kwh100: 24.1, total: 42.6 },
+          { id: 'VHC-07', model: 'SD15',  kwh100: 22.0, total: 39.8 },
+          { id: 'VHC-08', model: 'SD15',  kwh100: 26.5, total: 35.5 },
+          { id: 'VHC-09', model: 'SD22C', kwh100: 32.5, total: 58.2 },
+          { id: 'VHC-10', model: 'SD22C', kwh100: 31.8, total: 55.4 },
+          { id: 'VHC-11', model: 'SD22C', kwh100: 34.2, total: 62.8 },
+          { id: 'VHC-12', model: 'SD22C', kwh100: 30.5, total: 49.6 },
+          { id: 'VHC-13', model: 'SD22C', kwh100: 35.8, total: 41.2 },
+          { id: 'VHC-14', model: 'SD22C', kwh100: 0,    total: 0 }
+        ]
+      },
+      fleet: {
+        stats: { working: 9, charging: 2, idle: 2, offline: 1 },
+        vehicles: [
+          { id: 'VHC-01', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 78, loc: '滨江路 K5+200',   todayKm: 5.8 },
+          { id: 'VHC-02', model: 'SD15',  status: 'work',    task: '浦东主干道清扫',   soc: 62, loc: '杨高路 K12+050',  todayKm: 6.2 },
+          { id: 'VHC-03', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 54, loc: '滨江路 K8+100',   todayKm: 5.1 },
+          { id: 'VHC-04', model: 'SD15',  status: 'charge',  task: '—',               soc: 18, loc: '充电桩 #C-07',     todayKm: 4.8 },
+          { id: 'VHC-05', model: 'SD15',  status: 'work',    task: '徐汇商圈夜间保洁', soc: 71, loc: '徐家汇路 K3+050',  todayKm: 5.5 },
+          { id: 'VHC-06', model: 'SD15',  status: 'work',    task: '静安寺周边网格',   soc: 88, loc: '南京西路 K2+400',  todayKm: 4.4 },
+          { id: 'VHC-07', model: 'SD15',  status: 'idle',    task: '待命',            soc: 95, loc: '静安站点',          todayKm: 3.6 },
+          { id: 'VHC-08', model: 'SD15',  status: 'work',    task: '长宁商务区巡扫',   soc: 42, loc: '中山公园 K1+200',  todayKm: 6.0 },
+          { id: 'VHC-09', model: 'SD22C', status: 'work',    task: '黄埔滨江改造段',   soc: 65, loc: '滨江路 K2+800',   todayKm: 7.2 },
+          { id: 'VHC-10', model: 'SD22C', status: 'work',    task: '浦东主干道清扫',   soc: 48, loc: '杨高路 K8+500',   todayKm: 8.1 },
+          { id: 'VHC-11', model: 'SD22C', status: 'work',    task: '徐汇商圈夜间保洁', soc: 73, loc: '徐家汇路 K6+200',  todayKm: 6.8 },
+          { id: 'VHC-12', model: 'SD22C', status: 'charge',  task: '—',               soc: 32, loc: '充电桩 #C-03',     todayKm: 5.4 },
+          { id: 'VHC-13', model: 'SD22C', status: 'idle',    task: '待命',            soc: 90, loc: '徐汇站点',          todayKm: 4.2 },
+          { id: 'VHC-14', model: 'SD22C', status: 'offline', task: '维修中',          soc: 0,  loc: '维修车间',          todayKm: 0 }
+        ]
+      },
+      safety: {
+        sd15: { alert: 3, takeover: 1 },
+        sd22c: { alert: 4, takeover: 2 },
+        severity: [
+          { name: '高', value: 2, color: '#FF5470' },
+          { name: '中', value: 5, color: '#FFB546' },
+          { name: '低', value: 3, color: '#2EE6C5' }
+        ],
+        events: [
+          { time: '14:32:08', vehicle: 'VHC-09', model: 'SD22C', type: '接管', sev: '高', desc: '路径临时封闭 · 人工接管',     status: '处理中' },
+          { time: '14:18:42', vehicle: 'VHC-04', model: 'SD15',  type: '告警', sev: '中', desc: '激光雷达点云异常 · 自动降级', status: '已处理' },
+          { time: '13:54:11', vehicle: 'VHC-09', model: 'SD22C', type: '事件', sev: '低', desc: '垃圾倾倒完成 · 容量 100%→12%',status: '已完成' },
+          { time: '13:22:36', vehicle: 'VHC-12', model: 'SD22C', type: '告警', sev: '中', desc: 'SOC 低于阈值 · 已返桩充电',   status: '已处理' },
+          { time: '12:48:09', vehicle: 'VHC-04', model: 'SD15',  type: '告警', sev: '高', desc: '电池温度 48°C · 风扇提速',     status: '处理中' },
+          { time: '12:15:53', vehicle: 'VHC-09', model: 'SD22C', type: '事件', sev: '低', desc: '加水补给完成 · 120 L',         status: '已完成' },
+          { time: '11:42:18', vehicle: 'VHC-12', model: 'SD22C', type: '接管', sev: '高', desc: '行人横穿 · 紧急接管',         status: '已处理' },
+          { time: '11:08:44', vehicle: 'VHC-09', model: 'SD22C', type: '事件', sev: '低', desc: '充电完成 · SOC 19%→95%',       status: '已完成' },
+          { time: '10:36:22', vehicle: 'VHC-04', model: 'SD15',  type: '告警', sev: '中', desc: '5G RSSI -98 dBm · 通信抖动',   status: '已处理' },
+          { time: '09:52:17', vehicle: 'VHC-11', model: 'SD22C', type: '接管', sev: '中', desc: '施工区域 · 人工接管绕行',     status: '已处理' }
+        ]
+      },
+      resources: {
+        charge: {
+          count: 23, total: 1842, avgInterval: 47, avgDuration: 28,
+          hourly: [0,0,0,0,0,0,1,2,4,3,2,2,3,2,1,1,1,0,0,0,0,0,0,0],
+          records: [
+            { time: '13:22', vehicle: 'VHC-12', station: 'C-07', amount: 62, duration: 32 },
+            { time: '11:08', vehicle: 'VHC-09', station: 'C-03', amount: 76, duration: 41 },
+            { time: '09:15', vehicle: 'VHC-04', station: 'C-07', amount: 58, duration: 28 },
+            { time: '07:42', vehicle: 'VHC-08', station: 'C-02', amount: 65, duration: 35 },
+            { time: '06:20', vehicle: 'VHC-11', station: 'C-05', amount: 70, duration: 38 }
+          ]
+        },
+        water: {
+          count: 31, total: 2148, avgInterval: 32, avgDuration: 12,
+          hourly: [0,0,0,0,0,1,2,3,4,3,3,2,3,2,2,2,1,1,0,0,0,0,0,0],
+          records: [
+            { time: '12:15', vehicle: 'VHC-09', station: 'W-03', amount: 120, duration: 14 },
+            { time: '10:48', vehicle: 'VHC-02', station: 'W-01', amount: 95,  duration: 11 },
+            { time: '09:20', vehicle: 'VHC-10', station: 'W-04', amount: 110, duration: 13 },
+            { time: '07:55', vehicle: 'VHC-06', station: 'W-02', amount: 88,  duration: 10 },
+            { time: '06:30', vehicle: 'VHC-13', station: 'W-05', amount: 105, duration: 12 }
+          ]
+        },
+        trash: {
+          count: 14, total: 88, avgInterval: 95, avgDuration: 18,
+          hourly: [0,0,0,0,0,0,0,1,1,1,2,1,1,2,1,1,1,1,0,0,0,0,0,0],
+          records: [
+            { time: '13:54', vehicle: 'VHC-09', station: 'T-02', amount: 8.5, duration: 22 },
+            { time: '11:30', vehicle: 'VHC-03', station: 'T-01', amount: 7.2, duration: 18 },
+            { time: '09:48', vehicle: 'VHC-11', station: 'T-03', amount: 6.8, duration: 16 },
+            { time: '07:20', vehicle: 'VHC-08', station: 'T-02', amount: 9.0, duration: 24 }
+          ]
+        }
+      },
+      tasks: {
+        projects: [
+          {
+            name: '黄埔滨江改造段', deadline: '2026-07-15',
+            done: 41, total: 50, color: '#00E5FF',
+            vehicles: ['VHC-01', 'VHC-03', 'VHC-09'],
+            subtasks: [
+              { name: '黄埔滨江改造段·上午班', vehicle: 'VHC-01', status: '完成', progress: 100 },
+              { name: '黄埔滨江改造段·下午班', vehicle: 'VHC-03', status: '进行', progress: 72 },
+              { name: '黄埔滨江改造段·夜班',   vehicle: 'VHC-09', status: '进行', progress: 48 },
+              { name: '黄埔滨江改造段·深夜班', vehicle: 'VHC-01', status: '待开', progress: 0 }
+            ]
+          },
+          {
+            name: '浦东主干道清扫', deadline: '2026-06-30',
+            done: 58, total: 64, color: '#B6FF3D',
+            vehicles: ['VHC-02', 'VHC-10'],
+            subtasks: [
+              { name: '浦东主干道清扫·上午班', vehicle: 'VHC-02', status: '完成', progress: 100 },
+              { name: '浦东主干道清扫·下午班', vehicle: 'VHC-10', status: '进行', progress: 86 },
+              { name: '浦东主干道清扫·夜班',   vehicle: 'VHC-02', status: '完成', progress: 100 }
+            ]
+          },
+          {
+            name: '徐汇商圈夜间保洁', deadline: '2026-07-20',
+            done: 35, total: 47, color: '#FFB546',
+            vehicles: ['VHC-05', 'VHC-11'],
+            subtasks: [
+              { name: '徐汇商圈夜间保洁·A班', vehicle: 'VHC-05', status: '进行', progress: 64 },
+              { name: '徐汇商圈夜间保洁·B班', vehicle: 'VHC-11', status: '进行', progress: 52 },
+              { name: '徐汇商圈夜间保洁·C班', vehicle: 'VHC-05', status: '待开', progress: 0 }
+            ]
+          },
+          {
+            name: '静安寺周边网格', deadline: '2026-06-22',
+            done: 32, total: 32, color: '#B6FF3D',
+            vehicles: ['VHC-06'],
+            subtasks: [
+              { name: '静安寺周边网格·上午班', vehicle: 'VHC-06', status: '完成', progress: 100 },
+              { name: '静安寺周边网格·下午班', vehicle: 'VHC-06', status: '完成', progress: 100 }
+            ]
+          },
+          {
+            name: '长宁商务区巡扫', deadline: '2026-07-10',
+            done: 28, total: 45, color: '#FF5470',
+            vehicles: ['VHC-08'],
+            subtasks: [
+              { name: '长宁商务区巡扫·上午班', vehicle: 'VHC-08', status: '进行', progress: 68 },
+              { name: '长宁商务区巡扫·下午班', vehicle: 'VHC-08', status: '进行', progress: 42 },
+              { name: '长宁商务区巡扫·夜班',   vehicle: 'VHC-08', status: '待开', progress: 0 }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  total: {
+    periodLabel: '累计 · 全生命周期',
+    hero: {
+      sweepDist: 32408, sweepTime: 2286, avgSpeed: 5.4,
+      driveRatio: '1.49 : 1', workShare: 74,
+      vsYesterdayPct: '+0.3%',
+      vsYesterdayAbs: '+96.4 km',
+      vsYesterdayTime: null,
+      vsYesterdayLabel: '近一日增量'
+    },
+    efficiency: { kwhPer100km: 25.5, totalPower: 286540, driveShare: 36.9, sd15: 19.5, sd22c: 31.5, baselineSd15: 22, baselineSd22c: 30, baselineTotal: 26 },
+    fleet: { online: 13, offline: 1, total: 14 },
+    safety: { alert: 1284, takeover: 426, sd15: { alert: 580, takeover: 192 }, sd22c: { alert: 704, takeover: 234 } },
+    trend: {
+      hours: ['1月','2月','3月','4月','5月','6月'],
+      drive: [6420, 7180, 8024, 7860, 9120, 9612],
+      sweep: [4280, 5060, 5840, 5520, 6480, 5228],
+      yesterdaySweep: null
+    },
+    tasks: {
+      rate: 92.8, done: 8421, total: 9074, deltaYesterday: 96, projectCount: 5,
+      projects: [
+        { name: '黄埔滨江改造段',   done: 1842, total: 1900, color: '#00E5FF' },
+        { name: '浦东主干道清扫',   done: 2128, total: 2200, color: '#B6FF3D' },
+        { name: '徐汇商圈夜间保洁', done: 1564, total: 1740, color: '#FFB546' },
+        { name: '静安寺周边网格',   done: 1486, total: 1486, color: '#B6FF3D' },
+        { name: '长宁商务区巡扫',   done: 1401, total: 1748, color: '#FF5470' }
+      ]
+    },
+    resources: {
+      charge: { count: 8421, total: 245620, marks: [] },
+      water:  { count: 11248, total: 82460, marks: [] },
+      trash:  { count: 5186, total: 462, marks: [] }
+    },
+    detail: {
+      efficiency: {
+        driveShareSD15: 33.8,
+        driveShareSD22C: 40.2,
+        compositionSD15: [
+          { name: '驱动能耗', value: 48200, color: '#00E5FF' },
+          { name: '清扫能耗', value: 38600, color: '#FFB546' },
+          { name: '辅助系统', value: 19500, color: '#2EE6C5' },
+          { name: '待机能耗', value: 16800, color: '#8B5CF6' }
+        ],
+        compositionSD22C: [
+          { name: '驱动能耗', value: 67600, color: '#00E5FF' },
+          { name: '清扫能耗', value: 46900, color: '#FFB546' },
+          { name: '辅助系统', value: 29100, color: '#2EE6C5' },
+          { name: '待机能耗', value: 19840, color: '#8B5CF6' }
+        ],
+        trend7d: {
+          days: ['5月','6月初','6月上','6月中','6月中','6月下','当前'],
+          sd15:  [20.5, 21.2, 19.8, 20.4, 19.5, 19.0, 19.5],
+          sd22c: [33.2, 32.5, 31.8, 32.0, 31.5, 30.8, 31.5],
+          total: [26.0, 26.4, 25.5, 25.8, 25.2, 24.6, 25.5]
+        },
+        composition: [
+          { name: '驱动能耗', value: 115800, color: '#00E5FF' },
+          { name: '清扫能耗', value: 85500,  color: '#FFB546' },
+          { name: '辅助系统', value: 48600,  color: '#2EE6C5' },
+          { name: '待机能耗', value: 36640,  color: '#8B5CF6' }
+        ],
+        vehicles: [
+          { id: 'VHC-01', model: 'SD15',  kwh100: 20.2, total: 15428 },
+          { id: 'VHC-02', model: 'SD15',  kwh100: 19.8, total: 14962 },
+          { id: 'VHC-03', model: 'SD15',  kwh100: 21.5, total: 16850 },
+          { id: 'VHC-04', model: 'SD15',  kwh100: 20.4, total: 15720 },
+          { id: 'VHC-05', model: 'SD15',  kwh100: 19.0, total: 14280 },
+          { id: 'VHC-06', model: 'SD15',  kwh100: 18.8, total: 13950 },
+          { id: 'VHC-07', model: 'SD15',  kwh100: 19.5, total: 14620 },
+          { id: 'VHC-08', model: 'SD15',  kwh100: 22.1, total: 17480 },
+          { id: 'VHC-09', model: 'SD22C', kwh100: 31.2, total: 23680 },
+          { id: 'VHC-10', model: 'SD22C', kwh100: 30.8, total: 22940 },
+          { id: 'VHC-11', model: 'SD22C', kwh100: 32.5, total: 24850 },
+          { id: 'VHC-12', model: 'SD22C', kwh100: 29.5, total: 21820 },
+          { id: 'VHC-13', model: 'SD22C', kwh100: 33.8, total: 18420 },
+          { id: 'VHC-14', model: 'SD22C', kwh100: 31.0, total: 16580 }
+        ]
+      },
+      fleet: {
+        stats: { working: 9, charging: 2, idle: 2, offline: 1 },
+        vehicles: [
+          { id: 'VHC-01', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 78, loc: '滨江路 K5+200',   todayKm: 2218 },
+          { id: 'VHC-02', model: 'SD15',  status: 'work',    task: '浦东主干道清扫',   soc: 62, loc: '杨高路 K12+050',  todayKm: 2410 },
+          { id: 'VHC-03', model: 'SD15',  status: 'work',    task: '黄埔滨江改造段',   soc: 54, loc: '滨江路 K8+100',   todayKm: 2380 },
+          { id: 'VHC-04', model: 'SD15',  status: 'charge',  task: '—',               soc: 18, loc: '充电桩 #C-07',     todayKm: 2280 },
+          { id: 'VHC-05', model: 'SD15',  status: 'work',    task: '徐汇商圈夜间保洁', soc: 71, loc: '徐家汇路 K3+050',  todayKm: 2090 },
+          { id: 'VHC-06', model: 'SD15',  status: 'work',    task: '静安寺周边网格',   soc: 88, loc: '南京西路 K2+400',  todayKm: 2185 },
+          { id: 'VHC-07', model: 'SD15',  status: 'idle',    task: '待命',            soc: 95, loc: '静安站点',          todayKm: 1980 },
+          { id: 'VHC-08', model: 'SD15',  status: 'work',    task: '长宁商务区巡扫',   soc: 42, loc: '中山公园 K1+200',  todayKm: 2480 },
+          { id: 'VHC-09', model: 'SD22C', status: 'work',    task: '黄埔滨江改造段',   soc: 65, loc: '滨江路 K2+800',   todayKm: 2820 },
+          { id: 'VHC-10', model: 'SD22C', status: 'work',    task: '浦东主干道清扫',   soc: 48, loc: '杨高路 K8+500',   todayKm: 2980 },
+          { id: 'VHC-11', model: 'SD22C', status: 'work',    task: '徐汇商圈夜间保洁', soc: 73, loc: '徐家汇路 K6+200',  todayKm: 2640 },
+          { id: 'VHC-12', model: 'SD22C', status: 'charge',  task: '—',               soc: 32, loc: '充电桩 #C-03',     todayKm: 2520 },
+          { id: 'VHC-13', model: 'SD22C', status: 'idle',    task: '待命',            soc: 90, loc: '徐汇站点',          todayKm: 2280 },
+          { id: 'VHC-14', model: 'SD22C', status: 'offline', task: '维修中',          soc: 0,  loc: '维修车间',          todayKm: 1860 }
+        ]
+      },
+      safety: {
+        sd15: { alert: 580, takeover: 192 },
+        sd22c: { alert: 704, takeover: 234 },
+        severity: [
+          { name: '高', value: 286, color: '#FF5470' },
+          { name: '中', value: 684, color: '#FFB546' },
+          { name: '低', value: 740, color: '#2EE6C5' }
+        ],
+        events: [
+          { time: '昨日 14:32', vehicle: 'VHC-09', model: 'SD22C', type: '接管', sev: '高', desc: '路径临时封闭 · 人工接管',     status: '已处理' },
+          { time: '昨日 11:42', vehicle: 'VHC-12', model: 'SD22C', type: '接管', sev: '高', desc: '行人横穿 · 紧急接管',         status: '已处理' },
+          { time: '前日 09:15', vehicle: 'VHC-04', model: 'SD15',  type: '告警', sev: '高', desc: '电池温度告警',                 status: '已处理' },
+          { time: '前日 16:20', vehicle: 'VHC-11', model: 'SD22C', type: '接管', sev: '中', desc: '施工区域绕行',                 status: '已处理' },
+          { time: '6/19 08:14', vehicle: 'VHC-02', model: 'SD15',  type: '告警', sev: '中', desc: '激光雷达点云异常',             status: '已处理' },
+          { time: '6/18 22:50', vehicle: 'VHC-10', model: 'SD22C', type: '告警', sev: '中', desc: '通信链路抖动',                 status: '已处理' },
+          { time: '6/17 11:08', vehicle: 'VHC-09', model: 'SD22C', type: '事件', sev: '低', desc: '充电完成',                     status: '已完成' },
+          { time: '6/16 19:36', vehicle: 'VHC-05', model: 'SD15',  type: '事件', sev: '低', desc: '加水补给完成',                 status: '已完成' }
+        ]
+      },
+      resources: {
+        charge: {
+          count: 8421, total: 286540, avgInterval: 52, avgDuration: 31,
+          hourly: [12,8,5,3,4,9,18,28,32,28,24,22,26,24,20,18,16,12,8,5,3,2,8,14],
+          records: [
+            { time: '昨日 13:22', vehicle: 'VHC-12', station: 'C-07', amount: 62, duration: 32 },
+            { time: '昨日 11:08', vehicle: 'VHC-09', station: 'C-03', amount: 76, duration: 41 },
+            { time: '昨日 09:15', vehicle: 'VHC-04', station: 'C-07', amount: 58, duration: 28 },
+            { time: '前日 14:40', vehicle: 'VHC-02', station: 'C-02', amount: 70, duration: 36 },
+            { time: '前日 10:25', vehicle: 'VHC-10', station: 'C-04', amount: 68, duration: 34 }
+          ]
+        },
+        water: {
+          count: 11248, total: 82460, avgInterval: 38, avgDuration: 11,
+          hourly: [8,5,3,2,3,8,16,26,32,28,26,24,28,26,22,20,16,10,6,3,2,2,6,10],
+          records: [
+            { time: '昨日 12:15', vehicle: 'VHC-09', station: 'W-03', amount: 120, duration: 14 },
+            { time: '昨日 10:48', vehicle: 'VHC-02', station: 'W-01', amount: 95,  duration: 11 },
+            { time: '前日 15:20', vehicle: 'VHC-05', station: 'W-04', amount: 108, duration: 13 },
+            { time: '前日 09:30', vehicle: 'VHC-11', station: 'W-02', amount: 102, duration: 12 }
+          ]
+        },
+        trash: {
+          count: 5186, total: 462, avgInterval: 102, avgDuration: 17,
+          hourly: [2,1,1,1,1,4,8,12,16,14,12,10,12,10,10,8,6,4,2,1,1,1,2,4],
+          records: [
+            { time: '昨日 13:54', vehicle: 'VHC-09', station: 'T-02', amount: 8.5, duration: 22 },
+            { time: '昨日 11:30', vehicle: 'VHC-03', station: 'T-01', amount: 7.2, duration: 18 },
+            { time: '前日 16:10', vehicle: 'VHC-11', station: 'T-03', amount: 7.8, duration: 20 }
+          ]
+        }
+      },
+      tasks: {
+        projects: [
+          {
+            name: '黄埔滨江改造段', deadline: '2026-07-15',
+            done: 1842, total: 1900, color: '#00E5FF',
+            vehicles: ['VHC-01', 'VHC-03', 'VHC-09'],
+            subtasks: [
+              { name: '黄埔滨江改造段·上午班', vehicle: 'VHC-01', status: '完成', progress: 100 },
+              { name: '黄埔滨江改造段·下午班', vehicle: 'VHC-03', status: '进行', progress: 92 },
+              { name: '黄埔滨江改造段·夜班',   vehicle: 'VHC-09', status: '进行', progress: 78 },
+              { name: '黄埔滨江改造段·深夜班', vehicle: 'VHC-01', status: '进行', progress: 64 }
+            ]
+          },
+          {
+            name: '浦东主干道清扫', deadline: '2026-06-30',
+            done: 2128, total: 2200, color: '#B6FF3D',
+            vehicles: ['VHC-02', 'VHC-10'],
+            subtasks: [
+              { name: '浦东主干道清扫·上午班', vehicle: 'VHC-02', status: '完成', progress: 100 },
+              { name: '浦东主干道清扫·下午班', vehicle: 'VHC-10', status: '进行', progress: 88 }
+            ]
+          },
+          {
+            name: '徐汇商圈夜间保洁', deadline: '2026-07-20',
+            done: 1564, total: 1740, color: '#FFB546',
+            vehicles: ['VHC-05', 'VHC-11'],
+            subtasks: [
+              { name: '徐汇商圈夜间保洁·A班', vehicle: 'VHC-05', status: '进行', progress: 82 },
+              { name: '徐汇商圈夜间保洁·B班', vehicle: 'VHC-11', status: '进行', progress: 70 }
+            ]
+          },
+          {
+            name: '静安寺周边网格', deadline: '2026-06-22',
+            done: 1486, total: 1486, color: '#B6FF3D',
+            vehicles: ['VHC-06'],
+            subtasks: [
+              { name: '静安寺周边网格·上午班', vehicle: 'VHC-06', status: '完成', progress: 100 },
+              { name: '静安寺周边网格·下午班', vehicle: 'VHC-06', status: '完成', progress: 100 }
+            ]
+          },
+          {
+            name: '长宁商务区巡扫', deadline: '2026-07-10',
+            done: 1401, total: 1748, color: '#FF5470',
+            vehicles: ['VHC-08'],
+            subtasks: [
+              { name: '长宁商务区巡扫·上午班', vehicle: 'VHC-08', status: '进行', progress: 74 },
+              { name: '长宁商务区巡扫·下午班', vehicle: 'VHC-08', status: '进行', progress: 58 }
+            ]
+          }
+        ]
+      }
+    }
+  }
+};
+
+/* ============================================================
+   工具
+   ============================================================ */
+function fmt(n) {
+  if (n >= 10000) return n.toLocaleString('en-US');
+  if (Number.isInteger(n)) return String(n);
+  return n.toFixed(1);
+}
+function animateNum(el, target, dur = 900, decimals = null) {
+  const isInt = Number.isInteger(target) || (decimals === 0);
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const v = target * eased;
+    el.textContent = isInt ? Math.round(v).toLocaleString('en-US') : v.toFixed(decimals ?? 1);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = isInt ? target.toLocaleString('en-US') : (decimals !== null ? target.toFixed(decimals) : fmt(target));
+  }
+  requestAnimationFrame(step);
+}
+
+/* ============================================================
+   ECharts 实例
+   ============================================================ */
+let heroTrendChart;
+let effChart;
+let currentDim = 'day';
+let currentModalKey = null;
+const modalCharts = {};
+
+/* HERO 微趋势 */
+function renderHeroTrend(dim) {
+  const d = DATASET[dim].trend;
+  if (heroTrendChart) heroTrendChart.dispose();
+  heroTrendChart = echarts.init(document.getElementById('heroTrend'));
+  heroTrendChart.setOption({
+    backgroundColor: 'transparent',
+    grid: { left: 0, right: 0, top: 5, bottom: 0 },
+    xAxis: { type: 'category', show: false, boundaryGap: false, data: d.hours },
+    yAxis: { type: 'value', show: false, min: 0 },
+    series: [{
+      type: 'line', smooth: true, symbol: 'none',
+      data: d.sweep,
+      lineStyle: { width: 2, color: '#00E5FF', shadowColor: '#00E5FF', shadowBlur: 8 },
+      areaStyle: {
+        color: { type: 'linear', x:0,y:0,x2:0,y2:1, colorStops:[
+          {offset:0,color:'rgba(0,229,255,0.4)'}, {offset:1,color:'rgba(0,229,255,0)'}
+        ]}
+      }
+    }]
+  });
+}
+
+/* 项目任务完成情况 */
+function renderTasks(dim) {
+  const t = DATASET[dim].tasks;
+  animateNum(document.getElementById('taskRate'), t.rate, 1100, 1);
+  animateNum(document.getElementById('taskDone'), t.done, 900, 0);
+  animateNum(document.getElementById('taskTotal'), t.total, 900, 0);
+  document.getElementById('taskDelta').textContent = `▲ +${t.deltaYesterday} vs 昨日`;
+  document.getElementById('taskTag').textContent = `${t.projectCount} 个项目 · 在执行`;
+
+  const list = document.getElementById('taskProjList');
+  list.innerHTML = t.projects.map(p => {
+    const pct = (p.done / p.total * 100);
+    const doneStr = p.done >= 10000 ? p.done.toLocaleString('en-US') : p.done;
+    const totalStr = p.total >= 10000 ? p.total.toLocaleString('en-US') : p.total;
+    return `
+      <div class="task-proj">
+        <div class="task-proj-name"><i style="background:${p.color};box-shadow:0 0 5px ${p.color}"></i>${p.name}</div>
+        <div class="task-proj-meta"><b>${doneStr}</b>/${totalStr}<span class="pct" style="color:${p.color}">${pct.toFixed(1)}%</span></div>
+        <div class="task-proj-bar-wrap" data-overlay>
+          <div class="task-proj-bar" style="width:0%;background:${p.color};box-shadow:0 0 6px ${p.color}"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  // 触发进度条动画
+  requestAnimationFrame(() => {
+    list.querySelectorAll('.task-proj-bar').forEach((bar, i) => {
+      const pct = (t.projects[i].done / t.projects[i].total * 100);
+      bar.style.width = pct + '%';
+    });
+  });
+}
+
+/* 综合能效 · 百公里能耗子弹图（越低越优，各车型独立基准） */
+const EFF_ROWS = ['SD22C', 'SD15'];
+const EFF_STATUS_COLOR = { good: '#B6FF3D', warn: '#FFB546', bad: '#FF5470' };
+function effStatus(actual, baseline) {
+  if (actual < baseline) return 'good';
+  if (actual <= baseline * 1.10) return 'warn';
+  return 'bad';
+}
+function renderEfficiency(dim) {
+  const e = DATASET[dim].efficiency;
+  document.getElementById('effValSD15').textContent = e.sd15.toFixed(1);
+  document.getElementById('effValSD22C').textContent = e.sd22c.toFixed(1);
+  document.getElementById('effPower').textContent = fmt(e.totalPower);
+  document.getElementById('effRatio').textContent = e.driveShare.toFixed(1);
+
+  const rows = [
+    { name: 'SD22C', actual: e.sd22c, baseline: e.baselineSd22c },
+    { name: 'SD15',  actual: e.sd15,  baseline: e.baselineSd15 }
+  ];
+
+  if (effChart) effChart.dispose();
+  effChart = echarts.init(document.getElementById('effChart'));
+  effChart.setOption({
+    backgroundColor: 'transparent',
+    grid: { left: 50, right: 135, top: 8, bottom: 8 },
+    xAxis: { type: 'value', max: 40, show: false },
+    yAxis: {
+      type: 'category',
+      data: EFF_ROWS,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#B0C0DC', fontSize: 11.5, fontFamily: 'Space Mono, monospace' }
+    },
+    series: [
+      // 范围轨道（0 — 40 kWh/100km）
+      {
+        type: 'bar',
+        data: [40, 40],
+        barWidth: 22,
+        barGap: '-100%',
+        itemStyle: { color: 'rgba(82,196,255,0.06)' },
+        silent: true,
+        z: 1,
+        animation: false
+      },
+      // 子弹图主体（范围条 + 实际值条 + 基准标记 + 标签）
+      {
+        type: 'custom',
+        renderItem: function(params, api) {
+          const idx = api.value(0);
+          const baseline = api.value(1);
+          const actual = api.value(2);
+
+          const yCenter = api.coord([0, idx])[1];
+          const x0 = api.coord([0, idx])[0];
+          const xMax = api.coord([40, idx])[0];
+          const xBase = api.coord([baseline, idx])[0];
+          const xAct = api.coord([actual, idx])[0];
+
+          const trackH = 22;
+          const barH = 10;
+          const status = effStatus(actual, baseline);
+          const color = EFF_STATUS_COLOR[status];
+          const delta = (actual - baseline) / baseline * 100;
+          const sign = delta >= 0 ? '+' : '';
+          const warn = status === 'bad' ? '⚠' : (status === 'warn' ? '△' : '✓');
+
+          return {
+            type: 'group',
+            children: [
+              // 实际值条
+              {
+                type: 'rect',
+                shape: { x: x0, y: yCenter - barH / 2, width: xAct - x0, height: barH },
+                style: { fill: color, shadowColor: color, shadowBlur: 8 }
+              },
+              // 基准标记（白色细竖线，跨整条轨道）
+              {
+                type: 'rect',
+                shape: { x: xBase - 1, y: yCenter - trackH / 2, width: 2, height: trackH },
+                style: { fill: '#FFFFFF', opacity: 0.92, shadowColor: '#FFFFFF', shadowBlur: 3 }
+              },
+              // 实际值大字
+              {
+                type: 'text',
+                style: {
+                  x: xMax + 8, y: yCenter - 2,
+                  text: actual.toFixed(1),
+                  fill: '#E8F4FF',
+                  font: 'bold 13px "Space Mono", monospace',
+                  textAlign: 'left',
+                  textVerticalAlign: 'middle'
+                }
+              },
+              // 基准值（小灰字，紧贴实际值右侧）
+              {
+                type: 'text',
+                style: {
+                  x: xMax + 46, y: yCenter - 1,
+                  text: `/ ${baseline}`,
+                  fill: '#7E8DAB',
+                  font: '10px "Space Mono", monospace',
+                  textAlign: 'left',
+                  textVerticalAlign: 'middle'
+                }
+              },
+              // 差异百分比 + 状态符号
+              {
+                type: 'text',
+                style: {
+                  x: xMax + 78, y: yCenter - 2,
+                  text: `${sign}${delta.toFixed(0)}% ${warn}`,
+                  fill: color,
+                  font: 'bold 11px "Space Mono", monospace',
+                  textAlign: 'left',
+                  textVerticalAlign: 'middle'
+                }
+              }
+            ]
+          };
+        },
+        data: rows.map((r, i) => [i, r.baseline, r.actual]),
+        z: 3,
+        animationDuration: 0
+      }
+    ]
+  });
+}
+
+/* 资源节奏时间条 */
+function renderResourceTracks(dim) {
+  const r = DATASET[dim].resources;
+  const panel = document.querySelector('.resource-rhythm');
+  panel.classList.toggle('dim-total', dim === 'total');
+
+  const cfg = [
+    { key: 'charge', id: 'tlCharge', color: 'var(--lime)',  markColor: '#B6FF3D' },
+    { key: 'water',  id: 'tlWater',  color: '#4FC3F7',      markColor: '#4FC3F7' },
+    { key: 'trash',  id: 'tlTrash',  color: 'var(--violet)', markColor: '#8B5CF6' }
+  ];
+  cfg.forEach(c => {
+    const data = r[c.key];
+    const el = document.getElementById(c.id);
+    el.style.setProperty('--c', c.markColor);
+    el.innerHTML = data.marks.map(pos => {
+      // pos 是 0-100 的百分比
+      return `<div class="resource-tick" style="left:${pos}%;--c:${c.markColor}"></div>`;
+    }).join('');
+  });
+  document.getElementById('rcCharge').textContent = r.charge.count.toLocaleString('en-US');
+  document.getElementById('rcWater').textContent = r.water.count.toLocaleString('en-US');
+  document.getElementById('rcTrash').textContent = r.trash.count.toLocaleString('en-US');
+  const fmtTotal = v => v ? (v >= 10000 ? v.toLocaleString('en-US') : v) : '—';
+  document.getElementById('rkCharge').textContent = fmtTotal(r.charge.total);
+  document.getElementById('rkWater').textContent = fmtTotal(r.water.total);
+  document.getElementById('rkTrash').textContent = fmtTotal(r.trash.total);
+  document.getElementById('ruTrash').textContent = dim === 'total' ? 't' : '%';
+
+  const insights = document.getElementById('resourceInsights');
+  if (dim === 'total') {
+    const totalCnt = r.charge.count + r.water.count + r.trash.count;
+    insights.innerHTML = `
+      <div class="ri-item">
+        <div class="ri-label">累计补给次数</div>
+        <div class="ri-val">${totalCnt.toLocaleString('en-US')}</div>
+      </div>
+      <div class="ri-item">
+        <div class="ri-label">日均频次</div>
+        <div class="ri-val">83<span>次/日</span></div>
+      </div>
+      <div class="ri-item">
+        <div class="ri-label">平均补给间隔</div>
+        <div class="ri-val">52<span>min</span></div>
+      </div>
+      <div class="ri-item">
+        <div class="ri-label">节奏效率</div>
+        <div class="ri-val" style="color:var(--lime)">A</div>
+      </div>`;
+  } else {
+    insights.innerHTML = `
+      <div class="ri-item">
+        <div class="ri-label">高峰补给时段</div>
+        <div class="ri-val">08:00 — 10:00</div>
+      </div>
+      <div class="ri-item">
+        <div class="ri-label">平均补给间隔</div>
+        <div class="ri-val">47<span>min</span></div>
+      </div>
+      <div class="ri-item">
+        <div class="ri-label">节奏效率</div>
+        <div class="ri-val" style="color:var(--lime)">A</div>
+      </div>
+      <div class="ri-item">
+        <div class="ri-label">异常聚集</div>
+        <div class="ri-val" style="color:var(--amber)">2<span>处</span></div>
+      </div>`;
+  }
+}
+
+/* HERO 数字 */
+function renderHero(dim) {
+  const h = DATASET[dim].hero;
+  document.getElementById('heroPeriod').textContent = DATASET[dim].periodLabel;
+  animateNum(document.getElementById('heroNum'), h.sweepDist, 1100, 1);
+  animateNum(document.getElementById('hs1'), h.sweepTime, 900, 1);
+  animateNum(document.getElementById('hs2'), h.avgSpeed, 900, 1);
+  document.getElementById('hs3').textContent = h.driveRatio;
+  document.getElementById('hs4').textContent = h.vsYesterdayPct;
+  document.getElementById('hs4Label').textContent = h.vsYesterdayLabel;
+  const timePart = h.vsYesterdayTime ? `截至 ${h.vsYesterdayTime} · ` : '';
+  document.getElementById('hd4').textContent = timePart + h.vsYesterdayAbs;
+  document.getElementById('hd3').textContent = `作业占比 ${h.workShare}%`;
+}
+
+/* 车队状态条 */
+function renderFleetStatus(dim) {
+  const f = DATASET[dim].fleet;
+  document.getElementById('fleetOnline').innerHTML = `${f.online}<span class="total">/${f.total}</span>`;
+  const pct = (f.online / f.total * 100);
+  document.getElementById('fleetPct').textContent = pct.toFixed(1) + '%';
+  const bar = document.getElementById('fleetBar');
+  bar.style.width = '0%';
+  requestAnimationFrame(() => { bar.style.width = pct + '%'; });
+}
+
+/* 安全块 */
+function renderSafety(dim) {
+  const s = DATASET[dim].safety;
+  animateNum(document.getElementById('safetySd15Alert'), s.sd15.alert, 800, 0);
+  animateNum(document.getElementById('safetySd15Takeover'), s.sd15.takeover, 800, 0);
+  animateNum(document.getElementById('safetySd22cAlert'), s.sd22c.alert, 800, 0);
+  animateNum(document.getElementById('safetySd22cTakeover'), s.sd22c.takeover, 800, 0);
+  // Update trends
+  const dayDelta = (a, b) => a > b ? `▲ +${a-b} vs 昨` : a < b ? `▼ -${b-a} vs 昨` : `→ 持平`;
+  document.getElementById('safetySd15AlertTrend').textContent = dayDelta(s.sd15.alert, s.sd15.alert - 1);
+  document.getElementById('safetySd15TakeoverTrend').textContent = dayDelta(s.sd15.takeover - 1, s.sd15.takeover);
+  document.getElementById('safetySd22cAlertTrend').textContent = dayDelta(s.sd22c.alert, s.sd22c.alert - 1);
+  document.getElementById('safetySd22cTakeoverTrend').textContent = dayDelta(s.sd22c.takeover - 1, s.sd22c.takeover);
+}
+
+/* ============================================================
+   事件流
+   ============================================================ */
+const EVENTS = [
+  { time: '14:32:08', type: 'takeover', title: '人工接管 #TK-0318', meta: 'VHC-09 · 路径临时封闭', c: 'var(--teal)' },
+  { time: '14:18:42', type: 'alert', title: '激光雷达点云异常', meta: 'VHC-04 · 已自动降级', c: 'var(--rose)' },
+  { time: '13:54:11', type: 'trash', title: '垃圾倾倒完成', meta: 'VHC-09 · 容量 100%→12%', c: 'var(--violet)' },
+  { time: '13:22:36', type: 'charge', title: '充电开始', meta: 'VHC-12 · SOC 18% · 桩 #C-07', c: 'var(--lime)' },
+  { time: '12:48:09', type: 'alert', title: '电池温度告警', meta: 'VHC-04 · 48°C · 风扇提速', c: 'var(--rose)' },
+  { time: '12:15:53', type: 'water', title: '加水补给完成', meta: 'VHC-09 · 120 L · 站点 #W-03', c: '#4FC3F7' },
+  { time: '11:42:18', type: 'takeover', title: '人工接管 #TK-0317', meta: 'VHC-12 · 行人横穿', c: 'var(--teal)' },
+  { time: '11:08:44', type: 'charge', title: '充电完成', meta: 'VHC-09 · SOC 19%→95%', c: 'var(--lime)' },
+  { time: '10:36:22', type: 'alert', title: '通信链路抖动', meta: 'VHC-04 · 5G RSSI -98 dBm', c: 'var(--amber)' },
+];
+const EVENT_ICONS = {
+  takeover: 'M12 2 L4 5v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V5z',
+  alert: 'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z M12 9v4 M12 17h.01',
+  trash: 'M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6',
+  charge: 'M13 2 L4 14h7l-1 8 9-12h-7z',
+  water: 'M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z'
+};
+function renderEvents() {
+  const list = document.getElementById('eventList');
+  list.innerHTML = EVENTS.map((e, i) => `
+    <div class="event-row" style="--ec:${e.c}; animation-delay:${i*0.04}s">
+      <div class="event-time">${e.time}</div>
+      <div class="event-icon">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="${EVENT_ICONS[e.type]}"/>
+        </svg>
+      </div>
+      <div class="event-body">
+        <div class="event-title">${e.title}</div>
+        <div class="event-meta">${e.meta}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   维度切换
+   ============================================================ */
+function applyDim(dim) {
+  currentDim = dim;
+  document.querySelectorAll('#dimSwitch button, #modalDimSwitch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.dim === dim);
+  });
+  renderHero(dim);
+  renderHeroTrend(dim);
+  renderTasks('day');
+  renderFleetStatus(dim);
+  renderSafety(dim);
+  renderEfficiency(dim);
+  renderResourceTracks(dim);
+}
+function switchDim(dim) {
+  applyDim(dim);
+  if (currentModalKey) refreshModal();
+}
+
+/* ============================================================
+   二级弹窗 Modal
+   ============================================================ */
+function openModal(key) {
+  const cfg = MODAL_REGISTRY[key];
+  if (!cfg) return;
+  if (cfg.singleDim && currentDim !== 'day') applyDim('day');
+  currentModalKey = key;
+  document.getElementById('modalDimSwitch').style.display = cfg.singleDim ? 'none' : '';
+  const modal = document.getElementById('modalMask');
+  document.getElementById('modalTitle').textContent = cfg.title;
+  document.getElementById('modalSubtitle').textContent = cfg.subtitle(currentDim);
+  document.querySelectorAll('#modalDimSwitch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.dim === currentDim);
+  });
+  document.getElementById('modalBody').innerHTML = cfg.render(currentDim);
+  modal.hidden = false;
+  requestAnimationFrame(() => {
+    modal.classList.add('open');
+    cfg.mount && cfg.mount(currentDim);
+  });
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  const modal = document.getElementById('modalMask');
+  modal.classList.remove('open');
+  setTimeout(() => {
+    modal.hidden = true;
+    document.body.style.overflow = '';
+    Object.values(modalCharts).forEach(c => c && c.dispose && c.dispose());
+    Object.keys(modalCharts).forEach(k => delete modalCharts[k]);
+    currentModalKey = null;
+    document.getElementById('modalBody').innerHTML = '';
+  }, 220);
+}
+
+function refreshModal() {
+  if (!currentModalKey) return;
+  Object.values(modalCharts).forEach(c => c && c.dispose && c.dispose());
+  Object.keys(modalCharts).forEach(k => delete modalCharts[k]);
+  const cfg = MODAL_REGISTRY[currentModalKey];
+  document.getElementById('modalSubtitle').textContent = cfg.subtitle(currentDim);
+  document.getElementById('modalBody').innerHTML = cfg.render(currentDim);
+  requestAnimationFrame(() => cfg.mount && cfg.mount(currentDim));
+}
+
+function kpiHTML(items) {
+  return `<div class="modal-kpi-row">${items.map(k => `
+    <div class="modal-kpi" style="--kc:${k.color || '#00E5FF'}">
+      <div class="modal-kpi-label">${k.label}</div>
+      <div class="modal-kpi-val">${k.val}${k.unit ? `<span class="u">${k.unit}</span>` : ''}</div>
+      ${k.sub ? `<div class="modal-kpi-sub">${k.sub}</div>` : ''}
+    </div>`).join('')}</div>`;
+}
+
+function initModalChart(id, option) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (modalCharts[id]) modalCharts[id].dispose();
+  modalCharts[id] = echarts.init(el);
+  modalCharts[id].setOption(option);
+}
+
+/* === ① 综合能效详情 === */
+function renderEfficiencyDetail(dim) {
+  const e = DATASET[dim].efficiency;
+  const d = DATASET[dim].detail.efficiency;
+  return `
+    <div class="modal-kpi-row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="modal-kpi" style="--kc:#00E5FF">
+        <div class="modal-kpi-label">总耗电</div>
+        <div class="modal-kpi-val">${fmt(e.totalPower)}<span class="u">kWh</span></div>
+        <div class="modal-kpi-sub">${dim === 'day' ? '今日累计' : '全生命周期'}</div>
+      </div>
+      <div class="modal-kpi" style="--kc:#00E5FF">
+        <div class="modal-kpi-label">SD15 百公里能耗</div>
+        <div class="modal-kpi-val">${e.sd15.toFixed(1)}<span class="u">kWh/100km</span></div>
+        <div class="modal-kpi-sub">基准 ${e.baselineSd15} · 自驾占比 ${d.driveShareSD15}%</div>
+      </div>
+      <div class="modal-kpi" style="--kc:#FFB546">
+        <div class="modal-kpi-label">SD22C 百公里能耗</div>
+        <div class="modal-kpi-val">${e.sd22c.toFixed(1)}<span class="u">kWh/100km</span></div>
+        <div class="modal-kpi-sub">基准 ${e.baselineSd22c} · 自驾占比 ${d.driveShareSD22C}%</div>
+      </div>
+    </div>
+    <div class="modal-grid-2">
+      <div class="modal-sub-panel">
+        <div class="modal-sub-head">
+          <div class="modal-sub-title"><i></i>近 7 周期趋势</div>
+          <span class="modal-sub-tag">kWh / 100km</span>
+        </div>
+        <div id="effTrend" class="modal-chart"></div>
+      </div>
+      <div class="modal-sub-panel">
+        <div class="modal-sub-head">
+          <div class="modal-sub-title"><i></i>能耗构成</div>
+          <span class="modal-sub-tag">kWh</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:10.5px;color:var(--text-mute);text-align:center;margin-bottom:4px;font-family:'Space Mono',monospace">SD15</div>
+            <div id="effPieSD15" style="height:160px"></div>
+          </div>
+          <div>
+            <div style="font-size:10.5px;color:var(--text-mute);text-align:center;margin-bottom:4px;font-family:'Space Mono',monospace">SD22C</div>
+            <div id="effPieSD22C" style="height:160px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-table-wrap">
+      <div class="modal-table-head">
+        <div class="modal-sub-title"><i></i>车辆能耗明细</div>
+        <span class="modal-sub-tag">${d.vehicles.length} 辆车</span>
+      </div>
+      <table class="modal-table">
+        <thead><tr><th>编号</th><th>车型</th><th>百公里能耗</th><th>累计耗电</th><th>vs 基准</th></tr></thead>
+        <tbody>
+          ${d.vehicles.map(v => {
+            const base = v.model === 'SD15' ? e.baselineSd15 : e.baselineSd22c;
+            const delta = v.kwh100 === 0 ? null : ((v.kwh100 - base) / base * 100);
+            const status = delta === null ? 'offline' : (delta < 0 ? 'done' : (delta <= 10 ? 'charge' : 'alert'));
+            const deltaText = delta === null ? '<span class="mute">离线</span>'
+              : `<span class="pill-tag ${status}">${delta >= 0 ? '+' : ''}${delta.toFixed(0)}%</span>`;
+            return `<tr>
+              <td>${v.id}</td>
+              <td>${v.model}</td>
+              <td>${v.kwh100 === 0 ? '<span class="mute">—</span>' : v.kwh100.toFixed(1)}</td>
+              <td>${fmt(v.total)}</td>
+              <td>${deltaText}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+function mountEfficiencyDetail(dim) {
+  const d = DATASET[dim].detail.efficiency;
+  initModalChart('effTrend', {
+    backgroundColor: 'transparent',
+    grid: { left: 38, right: 16, top: 30, bottom: 28 },
+    legend: { textStyle: { color: '#B0C0DC', fontSize: 11 }, top: 0, right: 0, itemWidth: 12, itemHeight: 8 },
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: d.trend7d.days, axisLine: { lineStyle: { color: 'rgba(82,196,255,0.2)' } }, axisLabel: { color: '#7E8DAB', fontSize: 10 } },
+    yAxis: { type: 'value', axisLine: { show: false }, splitLine: { lineStyle: { color: 'rgba(82,196,255,0.06)' } }, axisLabel: { color: '#7E8DAB', fontSize: 10 } },
+    series: [
+      { name: 'SD15',  type: 'line', smooth: true, data: d.trend7d.sd15,  lineStyle: { color: '#00E5FF', width: 2 }, itemStyle: { color: '#00E5FF' }, symbol: 'circle', symbolSize: 5 },
+      { name: 'SD22C', type: 'line', smooth: true, data: d.trend7d.sd22c, lineStyle: { color: '#FFB546', width: 2 }, itemStyle: { color: '#FFB546' }, symbol: 'circle', symbolSize: 5 }
+    ]
+  });
+  const pieBase = {
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', formatter: '{b}: {c} kWh ({d}%)' },
+    series: [{
+      type: 'pie', radius: ['45%', '70%'],
+      label: { color: '#E8F4FF', fontSize: 9, formatter: '{d}%' },
+      labelLine: { lineStyle: { color: '#7E8DAB' } },
+      itemStyle: { borderColor: '#0E1525', borderWidth: 2 }
+    }]
+  };
+  initModalChart('effPieSD15', { ...pieBase, series: [{ ...pieBase.series[0], data: d.compositionSD15 }] });
+  initModalChart('effPieSD22C', { ...pieBase, series: [{ ...pieBase.series[0], data: d.compositionSD22C }] });
+}
+
+/* === ② 车队状态详情 === */
+function renderFleetDetail(dim) {
+  const f = DATASET[dim].fleet;
+  const d = DATASET[dim].detail.fleet;
+  const statusLabel = { work: '作业中', charge: '充电中', idle: '待命', offline: '离线' };
+  const socBar = soc => {
+    if (soc === 0 && false) return '<span class="mute">—</span>';
+    const c = soc < 30 ? '#FF5470' : soc < 60 ? '#FFB546' : '#B6FF3D';
+    return `<div style="display:flex;align-items:center;gap:8px"><span style="min-width:30px">${soc}%</span><span style="display:inline-block;width:48px;height:5px;background:rgba(82,196,255,0.08);border-radius:2px;overflow:hidden"><span style="display:block;height:100%;width:${soc}%;background:${c};box-shadow:0 0 5px ${c}"></span></span></div>`;
+  };
+  return `
+    ${kpiHTML([
+      { label: '在线 / 总数', val: f.online, unit: `/${f.total}`, color: '#B6FF3D' },
+      { label: '作业中', val: d.stats.working, color: '#00E5FF' },
+      { label: '充电中', val: d.stats.charging, color: '#FFB546' },
+      { label: '离线', val: d.stats.offline, color: '#FF5470' }
+    ])}
+    <div class="modal-table-wrap">
+      <div class="modal-table-head">
+        <div class="modal-sub-title"><i></i>车辆清单</div>
+        <span class="modal-sub-tag">${d.vehicles.length} 辆 · SOC 实时</span>
+      </div>
+      <table class="modal-table">
+        <thead><tr><th>编号</th><th>车型</th><th>状态</th><th>当前任务</th><th>SOC</th><th>位置</th><th>${dim === 'day' ? '今日里程' : '累计里程'}</th></tr></thead>
+        <tbody>
+          ${d.vehicles.map(v => `
+            <tr>
+              <td>${v.id}</td>
+              <td>${v.model}</td>
+              <td><span class="pill-tag ${v.status}">${statusLabel[v.status]}</span></td>
+              <td class="sec">${v.task}</td>
+              <td>${v.status === 'offline' ? '<span class="mute">—</span>' : socBar(v.soc)}</td>
+              <td class="sec">${v.loc}</td>
+              <td>${fmt(v.todayKm)} <span class="mute">km</span></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+/* === ③ 安全事件详情 === */
+function renderSafetyDetail(dim) {
+  const s = DATASET[dim].safety;
+  const d = DATASET[dim].detail.safety;
+  const handled = d.events.filter(e => e.status !== '处理中').length;
+  return `
+    ${kpiHTML([
+      { label: 'SD15 告警', val: fmt(d.sd15.alert), color: '#FF5470', sub: dim === 'day' ? '近 24h' : '累计' },
+      { label: 'SD15 接管', val: fmt(d.sd15.takeover), color: '#2EE6C5', sub: dim === 'day' ? '近 24h' : '累计' },
+      { label: 'SD22C 告警', val: fmt(d.sd22c.alert), color: '#FF5470', sub: dim === 'day' ? '近 24h' : '累计' },
+      { label: 'SD22C 接管', val: fmt(d.sd22c.takeover), color: '#2EE6C5', sub: dim === 'day' ? '近 24h' : '累计' }
+    ])}
+    ${kpiHTML([
+      { label: '告警总计', val: fmt(s.alert), color: '#FFB546', sub: dim === 'day' ? '近 24h' : '累计' },
+      { label: '接管总计', val: fmt(s.takeover), color: '#FFB546', sub: dim === 'day' ? '近 24h' : '累计' },
+      { label: '高严重', val: d.severity[0].value, color: '#FF5470' },
+      { label: '已处理', val: handled, unit: `/${d.events.length}`, color: '#B6FF3D' }
+    ])}
+    <div class="modal-grid-2 even">
+      <div class="modal-sub-panel">
+        <div class="modal-sub-head">
+          <div class="modal-sub-title"><i style="background:#FF5470;box-shadow:0 0 5px #FF5470"></i>严重等级分布</div>
+        </div>
+        <div id="safetySev" class="modal-chart"></div>
+      </div>
+      <div class="modal-sub-panel">
+        <div class="modal-sub-head">
+          <div class="modal-sub-title"><i></i>事件类型分布</div>
+        </div>
+        <div id="safetyType" class="modal-chart"></div>
+      </div>
+    </div>
+    <div class="modal-table-wrap">
+      <div class="modal-table-head">
+        <div class="modal-sub-title"><i></i>事件流水</div>
+        <span class="modal-sub-tag">${d.events.length} 条 · 按时间倒序</span>
+      </div>
+      <table class="modal-table">
+        <thead><tr><th>时间</th><th>车辆</th><th>车型</th><th>类型</th><th>严重</th><th>描述</th><th>处理</th></tr></thead>
+        <tbody>
+          ${d.events.map(ev => `
+            <tr>
+              <td class="sec">${ev.time}</td>
+              <td>${ev.vehicle}</td>
+              <td>${ev.model || '—'}</td>
+              <td><span class="pill-tag ${ev.type === '接管' ? 'takeover' : ev.type === '告警' ? 'alert' : 'event'}">${ev.type}</span></td>
+              <td><span style="color:${ev.sev === '高' ? 'var(--rose)' : ev.sev === '中' ? 'var(--amber)' : 'var(--teal)'}">${ev.sev}</span></td>
+              <td class="sec">${ev.desc}</td>
+              <td><span class="pill-tag ${ev.status === '处理中' ? 'processing' : 'done'}">${ev.status}</span></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+function mountSafetyDetail(dim) {
+  const d = DATASET[dim].detail.safety;
+  initModalChart('safetySev', {
+    backgroundColor: 'transparent',
+    legend: { bottom: 0, textStyle: { color: '#B0C0DC', fontSize: 11 }, itemWidth: 10, itemHeight: 8 },
+    tooltip: { trigger: 'item' },
+    series: [{
+      type: 'pie', radius: ['50%', '75%'],
+      label: { color: '#E8F4FF', fontSize: 11, formatter: '{b}\n{c}' },
+      itemStyle: { borderColor: '#0E1525', borderWidth: 2 },
+      data: d.severity
+    }]
+  });
+  const typeMap = {};
+  d.events.forEach(e => { typeMap[e.type] = (typeMap[e.type] || 0) + 1; });
+  const typeColors = { '接管': '#2EE6C5', '告警': '#FF5470', '事件': '#8B5CF6' };
+  initModalChart('safetyType', {
+    backgroundColor: 'transparent',
+    grid: { left: 36, right: 16, top: 18, bottom: 24 },
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: Object.keys(typeMap), axisLine: { lineStyle: { color: 'rgba(82,196,255,0.2)' } }, axisLabel: { color: '#B0C0DC', fontSize: 11 } },
+    yAxis: { type: 'value', axisLine: { show: false }, splitLine: { lineStyle: { color: 'rgba(82,196,255,0.06)' } }, axisLabel: { color: '#7E8DAB', fontSize: 10 } },
+    series: [{
+      type: 'bar', barWidth: 28,
+      data: Object.entries(typeMap).map(([k, v]) => ({ value: v, itemStyle: { color: typeColors[k], borderRadius: [4, 4, 0, 0] } })),
+      label: { show: true, position: 'top', color: '#E8F4FF', fontSize: 12, fontWeight: 700 }
+    }]
+  });
+}
+
+/* === ④ 资源补给节奏详情 === */
+const RES_CFG = {
+  charge: { name: '充电',   unit: 'kWh', color: '#B6FF3D', station: '充电桩' },
+  water:  { name: '加水',   unit: 'L',   color: '#4FC3F7', station: '加水站' },
+  trash:  { name: '倒垃圾', unit: '%',   color: '#8B5CF6', station: '倾倒点' }
+};
+function renderResourceDetail(dim) {
+  return `
+    <div class="modal-tabs" id="resTabs">
+      ${Object.entries(RES_CFG).map(([k, c], i) => `<button class="modal-tab ${i === 0 ? 'active' : ''}" data-res="${k}">${c.name}</button>`).join('')}
+    </div>
+    <div id="resContent"></div>`;
+}
+function renderResourceTab(dim, resKey) {
+  const d = DATASET[dim].detail.resources[resKey];
+  const cfg = RES_CFG[resKey];
+  const hours = Array.from({ length: 24 }, (_, i) => String(i));
+  document.getElementById('resContent').innerHTML = `
+    ${kpiHTML([
+      { label: '补给次数', val: fmt(d.count), color: cfg.color },
+      { label: '累计量', val: fmt(d.total), unit: cfg.unit, color: cfg.color },
+      { label: '平均间隔', val: d.avgInterval, unit: 'min', color: '#FFB546' },
+      { label: '平均时长', val: d.avgDuration, unit: 'min', color: '#00E5FF' }
+    ])}
+    <div class="modal-sub-panel" style="margin-bottom:18px">
+      <div class="modal-sub-head">
+        <div class="modal-sub-title"><i style="background:${cfg.color};box-shadow:0 0 5px ${cfg.color}"></i>24h 分布</div>
+        <span class="modal-sub-tag">每小时次数</span>
+      </div>
+      <div id="resHourly" class="modal-chart" style="height:180px"></div>
+    </div>
+    <div class="modal-table-wrap">
+      <div class="modal-table-head">
+        <div class="modal-sub-title"><i></i>补给记录（样本）</div>
+        <span class="modal-sub-tag">${d.records.length} 条</span>
+      </div>
+      <table class="modal-table">
+        <thead><tr><th>时间</th><th>车辆</th><th>站点</th><th>补给量</th><th>时长</th></tr></thead>
+        <tbody>
+          ${d.records.map(r => `
+            <tr>
+              <td class="sec">${r.time}</td>
+              <td>${r.vehicle}</td>
+              <td class="sec">${cfg.station} ${r.station}</td>
+              <td><b style="color:${cfg.color}">${r.amount}</b> <span class="mute">${cfg.unit}</span></td>
+              <td>${r.duration} <span class="mute">min</span></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  initModalChart('resHourly', {
+    backgroundColor: 'transparent',
+    grid: { left: 32, right: 12, top: 14, bottom: 26 },
+    tooltip: { trigger: 'axis', formatter: p => `${p[0].axisValue}:00<br/>${p[0].value} 次` },
+    xAxis: { type: 'category', data: hours, axisLine: { lineStyle: { color: 'rgba(82,196,255,0.2)' } }, axisLabel: { color: '#7E8DAB', fontSize: 10 } },
+    yAxis: { type: 'value', axisLine: { show: false }, splitLine: { lineStyle: { color: 'rgba(82,196,255,0.06)' } }, axisLabel: { color: '#7E8DAB', fontSize: 10 } },
+    series: [{
+      type: 'bar', barWidth: '60%',
+      data: d.hourly.map(v => ({ value: v, itemStyle: { color: cfg.color, borderRadius: [3, 3, 0, 0] } }))
+    }]
+  });
+}
+function mountResourceDetail(dim) {
+  renderResourceTab(dim, 'charge');
+  document.getElementById('resTabs').addEventListener('click', e => {
+    const btn = e.target.closest('.modal-tab');
+    if (!btn) return;
+    document.querySelectorAll('#resTabs .modal-tab').forEach(b => b.classList.toggle('active', b === btn));
+    Object.values(modalCharts).forEach(c => c && c.dispose && c.dispose());
+    Object.keys(modalCharts).forEach(k => delete modalCharts[k]);
+    renderResourceTab(dim, btn.dataset.res);
+  });
+}
+
+/* === ⑤ 项目任务详情 === */
+function renderTaskDetail(dim) {
+  const projects = DATASET[dim].detail.tasks.projects;
+  return `
+    <div class="modal-tabs" id="taskTabs">
+      ${projects.map((p, i) => `<button class="modal-tab ${i === 0 ? 'active' : ''}" data-proj="${i}">${p.name}</button>`).join('')}
+    </div>
+    <div id="taskContent"></div>`;
+}
+function renderTaskTab(dim, projIdx) {
+  const p = DATASET[dim].detail.tasks.projects[projIdx];
+  const rate = (p.done / p.total * 100).toFixed(1);
+  document.getElementById('taskContent').innerHTML = `
+    ${kpiHTML([
+      { label: '完成率', val: rate, unit: '%', color: p.color },
+      { label: '已完成 / 总数', val: fmt(p.done), unit: `/${fmt(p.total)}`, color: '#B6FF3D' },
+      { label: '投入车辆', val: p.vehicles.length, unit: '辆', color: '#00E5FF' },
+      { label: '截止日期', val: p.deadline, color: '#FFB546' }
+    ])}
+    <div class="modal-grid-2">
+      <div class="modal-sub-panel">
+        <div class="modal-sub-head">
+          <div class="modal-sub-title"><i style="background:${p.color};box-shadow:0 0 5px ${p.color}"></i>子任务清单</div>
+          <span class="modal-sub-tag">${p.subtasks.length} 项</span>
+        </div>
+        ${p.subtasks.map(s => `
+          <div class="subtask-row">
+            <div class="subtask-name">${s.name}</div>
+            <span class="subtask-meta sec">${s.vehicle}</span>
+            <span class="pill-tag ${s.status === '完成' ? 'done' : s.status === '进行' ? 'processing' : 'todo'}">${s.status}</span>
+            <div class="subtask-bar-wrap" data-overlay>
+              <div class="subtask-bar" style="width:0%;background:${p.color};box-shadow:0 0 6px ${p.color}" data-target="${s.progress}"></div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="modal-sub-panel">
+        <div class="modal-sub-head">
+          <div class="modal-sub-title"><i></i>项目车辆分配</div>
+          <span class="modal-sub-tag">${p.vehicles.length} 辆</span>
+        </div>
+        ${p.vehicles.map(v => `<div style="padding:11px 0;border-bottom:1px dashed rgba(82,196,255,0.08);display:flex;align-items:center;gap:11px"><span style="width:7px;height:7px;border-radius:50%;background:${p.color};box-shadow:0 0 5px ${p.color}"></span><span style="font-family:'Space Mono',monospace;color:var(--text-pri);font-size:13px">${v}</span></div>`).join('')}
+      </div>
+    </div>`;
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#taskContent .subtask-bar').forEach(b => {
+      b.style.width = b.dataset.target + '%';
+    });
+  });
+}
+function mountTaskDetail(dim) {
+  renderTaskTab(dim, 0);
+  document.getElementById('taskTabs').addEventListener('click', e => {
+    const btn = e.target.closest('.modal-tab');
+    if (!btn) return;
+    document.querySelectorAll('#taskTabs .modal-tab').forEach(b => b.classList.toggle('active', b === btn));
+    renderTaskTab(dim, parseInt(btn.dataset.proj));
+  });
+}
+
+const MODAL_REGISTRY = {
+  efficiency: { title: '综合能效详情', subtitle: dim => DATASET[dim].periodLabel, render: renderEfficiencyDetail, mount: mountEfficiencyDetail },
+  fleet:      { title: '车队状态详情', subtitle: dim => DATASET[dim].periodLabel, render: renderFleetDetail,      mount: () => {}, singleDim: true },
+  safety:     { title: '安全事件详情', subtitle: () => '近 24h · 实时刷新',         render: renderSafetyDetail,     mount: mountSafetyDetail },
+  resource:   { title: '资源补给节奏详情', subtitle: dim => DATASET[dim].periodLabel, render: renderResourceDetail,   mount: mountResourceDetail },
+  task:       { title: '项目任务详情', subtitle: dim => DATASET[dim].periodLabel, render: renderTaskDetail,       mount: mountTaskDetail, singleDim: true }
+};
+
+/* ============================================================
+   时钟 + 遥测抖动
+   ============================================================ */
+function tickClock() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+/* ============================================================
+   初始化
+   ============================================================ */
+window.addEventListener('load', () => {
+  renderEvents();
+  switchDim('day');
+
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  document.getElementById('dimSwitch').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (btn) switchDim(btn.dataset.dim);
+  });
+  document.getElementById('modalDimSwitch').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (btn) switchDim(btn.dataset.dim);
+  });
+
+  /* Modal 触发 + 关闭 */
+  document.querySelectorAll('.panel[data-modal]').forEach(p => {
+    p.addEventListener('click', () => openModal(p.dataset.modal));
+  });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalMask').addEventListener('click', e => {
+    if (e.target.id === 'modalMask') closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !document.getElementById('modalMask').hidden) closeModal();
+  });
+
+  window.addEventListener('resize', () => {
+    [heroTrendChart, effChart, ...Object.values(modalCharts)].forEach(c => c && c.resize && c.resize());
+  });
+});
+</script>
+</body>
+</html>
