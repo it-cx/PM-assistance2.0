@@ -128,6 +128,14 @@
   }
   .date-pick:hover { border-color: var(--border-strong); }
   .date-pick input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+  .date-pick-today {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: var(--cyan); letter-spacing: 0.1em;
+    cursor: pointer; padding: 6px 8px;
+    border-right: 1px solid var(--border-line);
+    transition: all 0.2s; user-select: none;
+  }
+  .date-pick-today:hover { background: rgba(0,229,255,0.1); }
   .date-pick-label {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 8px 6px 12px; cursor: pointer; user-select: none;
@@ -867,6 +875,7 @@
     </div>
 
     <div class="date-pick" id="datePick">
+      <span class="date-pick-today" id="todayLink">今日</span>
       <span class="date-pick-arrow" id="datePrev" title="前一天">
         <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </span>
@@ -1160,6 +1169,7 @@
       </div>
       <div class="modal-head-right">
         <div class="date-pick" id="modalDatePick" data-overlay>
+          <span class="date-pick-today" id="modalTodayLink">今日</span>
           <span class="date-pick-arrow" id="modalDatePrev" title="前一天">
             <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </span>
@@ -2556,7 +2566,7 @@ function shiftDate(days, inputId, labelId) {
 /* ============================================================
    初始化
    ============================================================ */
-function hookDatePicker(pickId, popId, inputId, labelId, prevId, nextId, cumId) {
+function hookDatePicker(pickId, popId, inputId, labelId, prevId, nextId, cumId, todayId) {
   document.getElementById(labelId).addEventListener('click', e => {
     e.stopPropagation();
     toggleCalendar(pickId, popId, inputId, labelId);
@@ -2568,6 +2578,13 @@ function hookDatePicker(pickId, popId, inputId, labelId, prevId, nextId, cumId) 
   document.getElementById(prevId).addEventListener('click', e => { e.stopPropagation(); shiftDate(-1, inputId, labelId); });
   document.getElementById(nextId).addEventListener('click', e => { e.stopPropagation(); shiftDate(1, inputId, labelId); });
   document.getElementById(cumId).addEventListener('click', () => switchToCumulative());
+  document.getElementById(todayId).addEventListener('click', e => {
+    e.stopPropagation();
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById(inputId).value = today;
+    document.getElementById(labelId).textContent = fmtDateLabel(today);
+    switchToDate(today);
+  });
 }
 
 window.addEventListener('load', () => {
@@ -2577,8 +2594,8 @@ window.addEventListener('load', () => {
   tickClock();
   setInterval(tickClock, 1000);
 
-  hookDatePicker('datePick', 'calPop', 'dateInput', 'dateLabel', 'datePrev', 'dateNext', 'cumulativeLink');
-  hookDatePicker('modalDatePick', 'modalCalPop', 'modalDateInput', 'modalDateLabel', 'modalDatePrev', 'modalDateNext', 'modalCumulativeLink');
+  hookDatePicker('datePick', 'calPop', 'dateInput', 'dateLabel', 'datePrev', 'dateNext', 'cumulativeLink', 'todayLink');
+  hookDatePicker('modalDatePick', 'modalCalPop', 'modalDateInput', 'modalDateLabel', 'modalDatePrev', 'modalDateNext', 'modalCumulativeLink', 'modalTodayLink');
 
   document.addEventListener('click', () => closeCalendars());
 
