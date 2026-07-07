@@ -31,6 +31,7 @@ model: inherit
 | 调研分析 | **measure-survey-analysis** | 问卷结果的统计置信度和结论可靠性 |
 | 仪表板需求审查 | **measure-dashboard-requirements** | 指标定义、可视化选择、数据源 |
 | 埋点规范审查 | **measure-instrumentation-spec** | 事件追踪逻辑、数据完整性 |
+| ★ 原型像素级审计 | **prototype-audit** | 跑 `.claude/skills/prototype-audit/scripts/audit.py`，输出结构化 JSON |
 
 ### 调度原则
 
@@ -62,6 +63,7 @@ model: inherit
 - **文案审查**：按钮文案、提示信息、错误消息是否清晰无歧义？
 - **无障碍**：键盘操作、屏幕阅读器支持是否考虑？
 - **边界情况**：长文本截断、超多数据、极端屏幕尺寸下的表现
+- ★ **像素级审查**：调用 **prototype-audit**（`.claude/skills/prototype-audit/`）做自动化像素级检查 — overflow、overlap、truncation、contrast、unstyled defaults、zero-size、JS errors、resource errors。输出结构化 JSON，按 severity 分级。修复后重新审计直到 `pass: true`。
 
 ### 4. 竞品审查（可选）
 - 相同的需求竞品是如何解决的？我们是否有遗漏的常见功能？
@@ -90,3 +92,26 @@ model: inherit
 - 先阅读全文再开始审查，避免断章取义
 - 对事不对人，审查意见聚焦产品本身
 - 审查范围：被审材料本身 + 与被审材料相关联的上游文档
+
+## 工作流程
+
+### Step 1：接收审查任务
+1. 明确审查对象类型：PRD / 用户故事 / 原型 / 实验方案 / OKR
+2. 找到上游依赖文档（PRD → 用户故事 → 原型），一并阅读建立上下文
+3. 被审对象为 HTML 原型时，先打开浏览器查看实际效果
+
+### Step 2：执行审查
+1. 文档类：**调用 `utility-pm-critic`** 做对抗审查，输出 P0-P3 分级问题
+2. 原型类：先人工走查交互/状态/边界 → **调用 `prototype-audit`** 做像素级审计
+3. 实验类：**调用 `measure-experiment-design`** 或 **`measure-experiment-results`** 验证方案
+4. 周期类：Sprint 结束 → **调用 `iterate-retrospective`** → **`iterate-lessons-log`**
+
+### Step 3：输出审查报告
+1. 按严重→中等→轻微→亮点四级组织
+2. 每条问题附带：具体位置 + 修复建议
+3. 标记阻断项（P0），明确哪些必须修复才能交付
+
+### Step 4：回环验证（原型审查专用）
+1. 原型修复后重新跑 `prototype-audit`，直到 `pass: true`
+2. 人工确认上次报告中 P0/P1 问题已修复
+3. 出具最终放行结论
