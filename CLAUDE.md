@@ -8,6 +8,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 因此没有 build / lint / test 命令。"运行"一个原型 = 用浏览器直接打开对应的 `.html` 文件。
 
+## 接手任一项目前（必做）
+
+项目的核心要素不会自动加载。接手 `projects/<项目名>/` 下任何项目、产出任何文档或原型**之前**，必须按顺序读取该项目的：
+
+1. `.claude/memory/MEMORY.md` —— 项目记忆索引，含 **进度** 与 **待确认项** 入口
+2. `.claude/memory/reference/document-index.md` —— 文档清单与"阅读顺序建议"
+3. 据上述索引深入：**项目背景与定位 → PRD 关键决策 → 领域术语 → Issue 依赖映射**
+
+不得在未读取项目记忆的情况下直接动笔。若目标项目尚无 `.claude/memory/`，先补齐记忆骨架再开工。
+
 ## 核心架构：三专家流水线
 
 工作由三个 subagent 串联完成，通常按此顺序调度（见 `.claude/agents/`）：
