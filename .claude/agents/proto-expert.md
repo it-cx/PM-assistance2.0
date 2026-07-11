@@ -1,7 +1,7 @@
 ---
 name: proto-expert
 description: 交互原型专家，负责生成HTML原型页面、标注交互行为、制作可演示的界面
-tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
+tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, Skill
 model: inherit
 ---
 
@@ -88,6 +88,7 @@ model: inherit
 |------|----------|------|
 | UX 合规性检查 | **ui-ux-pro-max** | `--domain ux "accessibility animation"` |
 | 交付前质量把关 | **ui-ux-pro-max** | Quick Reference §1-§3 |
+| ★ UI 细节打磨 | **make-interfaces-feel-better** | 圆角/阴影/动画/排版/热区/字体渲染 |
 
 ### 调度原则
 
@@ -96,6 +97,7 @@ model: inherit
 3. **实现阶段按复杂度**：简单原型直接用 Tailwind CDN，复杂项目调 `design-system` + `ui-styling`
 4. **品牌资产有需求才调** `design` / `banner-design`
 5. **汇报场景才调** `slides` / `utility-slideshow-creator`
+6. **★ 交付前必打磨**：原型完成后调 `make-interfaces-feel-better` 做 UI 细节审查，检查 concentric border radius、阴影 vs 边框、动画质感、字体渲染、最小热区等 16 项细节
 
 ## 技术规范
 - 使用纯 HTML + CSS + 原生 JavaScript，无外部依赖（CDN 的 CSS 框架可用 Tailwind CDN）
@@ -128,5 +130,6 @@ model: inherit
 1. 交互完整性：所有可点击/输入元素是否有反馈？
 2. 状态覆盖：是否每种状态都有展示？
 3. 标注清晰：交互标注是否包含触发→过程→结果→异常？
-4. **调用 `ui-ux-pro-max`** → `--domain ux "accessibility animation"` 做 UX 合规检查
+4. **调用 `make-interfaces-feel-better`** 做 UI 细节打磨：concentric border radius、阴影 vs 边框、动画质感、字体渲染、热区大小、transition 特异性、text-wrap 等 16 项检查
 5. 品牌一致性 → 必要时 **调用 `brand`**
+6. 完成后交接给 `review-expert` 做最终审查

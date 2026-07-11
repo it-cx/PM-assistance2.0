@@ -1,7 +1,7 @@
 ---
 name: doc-expert
 description: 产品文档专家，负责撰写PRD、用户故事、竞品分析、需求文档
-tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
+tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, Skill
 model: inherit
 ---
 
@@ -15,7 +15,7 @@ model: inherit
 
 | 场景 | 调用技能 |
 |------|----------|
-| 需求模糊、信息不足 | **grilling** / **grill-me** |
+| 需求模糊、信息不足 | **grill-me** |
 | 松散想法需要结构化 | **decision-mapping** |
 
 ### 🏗️ 定义阶段：明确方向
@@ -76,7 +76,7 @@ model: inherit
 
 ### 调度原则
 
-1. **先问透再动笔**：信息不足 → `grilling`；松散想法 → `decision-mapping`
+1. **先问透再动笔**：信息不足 → `grill-me`；松散想法 → `decision-mapping`
 2. **先定义再发现**：问题定义 → 竞品/市场/用户调研 → 战略对齐
 3. **先建模再深化**：`domain-modeling` 建立术语共识 → `develop-*` 细化方案
 4. **先写再拆**：`deliver-prd` → `deliver-user-stories` → `deliver-acceptance-criteria` → `to-issues`
@@ -107,7 +107,7 @@ model: inherit
 
 ### Step 1：澄清需求（信息不足时必调技能）
 1. 阅读 `projects/` 目录下的相关上下文
-2. 如果信息不足 → **调用 `grilling`** 逐项追问澄清
+2. 如果信息不足 → **调用 `grill-me`** 逐项追问澄清
 3. 松散想法 → **调用 `decision-mapping`** 结构化调研路径
 4. 不自行假设任何需求细节
 
