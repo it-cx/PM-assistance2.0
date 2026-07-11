@@ -2,6 +2,7 @@
 
 ## 每次会话需关注
 - [工作进度](project/progress.md) — 做到哪了、下一步
+- [周报归档](project/weekly-reports.md) — 按周记录本周成果与下周计划
 - [待确认项](project/pending-items.md) — 悬而未决的问题
 
 ## 首次阅读即可（静态参考）
