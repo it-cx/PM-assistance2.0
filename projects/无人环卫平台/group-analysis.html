@@ -88,13 +88,24 @@ html::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
 }
 .ym-cell:hover { background: var(--bg-card); color: var(--text); }
 .ym-cell.active { background: var(--blue); color: #fff; font-weight: 600; }
-.ym-cell.future { color: #CBD5E1; cursor: not-allowed; pointer-events: none; }
 .btn-export {
   padding: 6px 16px; font-size: 12.5px; color: var(--text-sec); font-weight: 500;
   background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
   cursor: pointer; transition: all 0.15s;
 }
 .btn-export:hover { border-color: var(--border-strong); color: var(--text); }
+
+.model-toggle {
+  display: inline-flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden;
+}
+.model-toggle button {
+  padding: 4px 12px; font-size: 12px; font-weight: 500; font-family: inherit;
+  background: transparent; border: none; cursor: pointer; color: var(--text-mute);
+  transition: all 0.15s; border-right: 1px solid var(--border);
+}
+.model-toggle button:last-child { border-right: none; }
+.model-toggle button:hover { color: var(--text); background: var(--bg-card); }
+.model-toggle button.active { background: var(--blue); color: #fff; }
 
 /* ===== Tab 栏 ===== */
 .tab-bar {
@@ -552,8 +563,10 @@ function showInsight(key) {
   }, 10);
 }
 var _overviewData = [];
+var _overviewByModel = {};
 var _overviewSortKey = 'completion';
 var _overviewSortDir = -1;
+var _overviewModel = 'SD15';
 var _expandedCompany = null;
 
 function fmt(n) {
@@ -648,7 +661,7 @@ function renderOverview() {
   var avgComp = totalTasksTotal > 0 ? (totalTasksDone / totalTasksTotal * 100) : 0;
   var avgPerVehicle = totalMileage / totalVehicles; // 单车月均里程
 
-  // 按完成率预排序
+  // 按完成率预排序（全部车型汇总）
   _overviewData = COMPANIES.map(function(name, i) {
     var m = MONTHLY[name];
     return {
@@ -660,6 +673,26 @@ function renderOverview() {
       mileage: m.mileage, energy: m.energy, takeovers: m.takeovers
     };
   }).sort(function(a, b) { return b.completion - a.completion; });
+
+  // 按车型拆分数据
+  _overviewByModel = {};
+  ['SD15', 'SD22C'].forEach(function(model) {
+    _overviewByModel[model] = COMPANIES.map(function(name, i) {
+      var m = MONTHLY[name];
+      var modelVehicles = m.vehicles.filter(function(v) { return v.model === model; });
+      var modelMileage = 0, modelEnergy = 0;
+      modelVehicles.forEach(function(v) { modelMileage += v.mileage; modelEnergy += v.energy; });
+      return {
+        name: name, idx: i,
+        completion: m.completion,
+        kwh100: modelMileage > 0 ? modelEnergy / modelMileage * 100 : null,
+        takeoverRate: modelMileage > 0 ? m.takeovers / m.mileage * 100 : null,
+        vehicles: modelVehicles.length,
+        mileage: modelMileage, energy: modelEnergy,
+        takeovers: modelMileage > 0 ? Math.round(m.takeovers * modelMileage / m.mileage) : 0
+      };
+    }).filter(function(r) { return r.vehicles > 0; });
+  });
   _overviewSortKey = 'completion';
   _overviewSortDir = -1;
 
@@ -675,7 +708,11 @@ function renderOverview() {
   '</div>' +
 
   // 排名表：归一化可比指标
-  '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">项目公司运营排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_ranking\')">?</span><div class="panel-head-tag">按归一化效率指标对比 · 点击表头排序</div></div></div>' +
+  '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">项目公司运营排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_ranking\')">?</span><div class="model-toggle" id="overviewModelToggle">' +
+    ['SD15', 'SD22C'].map(function(m) {
+      return '<button data-model="' + m + '"' + (m === _overviewModel ? ' class="active"' : '') + '>' + m + '</button>';
+    }).join('') +
+  '</div><div class="panel-head-tag">按归一化效率指标对比 · 点击表头排序</div></div></div>' +
   '<div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr>' +
     '<th onclick="sortOverview(\'name\')">公司<span class="sort-arrow">↕</span></th>' +
     '<th>车辆</th>' +
@@ -698,12 +735,13 @@ function renderOverview() {
 function renderOverviewTable() {
   var tbody = document.getElementById('overviewTbody');
   if (!tbody) return;
+  var data = _overviewByModel[_overviewModel];
   var totalM = 0, totalE = 0, totalT = 0;
-  _overviewData.forEach(function(r) { totalM += r.mileage; totalE += r.energy; totalT += r.takeovers; });
+  data.forEach(function(r) { totalM += r.mileage; totalE += r.energy; totalT += r.takeovers; });
   var grpKwh100 = totalE / totalM * 100;
   var grpTakeoverRate = totalT / totalM * 100;
 
-  tbody.innerHTML = _overviewData.map(function(r) {
+  tbody.innerHTML = data.map(function(r) {
     var cCls = r.completion < 70 ? 'cell-bad' : r.completion < 80 ? 'cell-warn' : r.completion >= 95 ? 'cell-good' : '';
     var eDelta = (r.kwh100 - grpKwh100) / grpKwh100;
     var eCls = eDelta > 0.10 ? 'cell-bad' : eDelta > 0.05 ? 'cell-warn' : eDelta < -0.05 ? 'cell-good' : '';
@@ -723,9 +761,13 @@ function sortOverview(key) {
   if (_overviewSortKey === key) { _overviewSortDir *= -1; }
   else { _overviewSortKey = key; _overviewSortDir = (key === 'completion') ? -1 : 1; }
   var dir = _overviewSortDir;
-  _overviewData.sort(function(a, b) {
+  var data = _overviewByModel[_overviewModel];
+  data.sort(function(a, b) {
     if (key === 'name') return dir * a.name.localeCompare(b.name);
-    return dir * (a[key] - b[key]);
+    var va = a[key], vb = b[key];
+    if (va === null) return 1;
+    if (vb === null) return -1;
+    return dir * (va - vb);
   });
   renderOverviewTable();
 }
@@ -1474,14 +1516,9 @@ function closeModal() {
 
   function renderYmGrid() {
     var allMonths = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-    var today = new Date();
-    var thisYear = today.getFullYear();
-    var thisMonth = today.getMonth(); // 0-indexed
     ymGrid.innerHTML = allMonths.map(function(m, i) {
       var isActive = (ymDropYear === 2026 && i === currentMonth);
-      var isFuture = (ymDropYear > thisYear) || (ymDropYear === thisYear && i > thisMonth);
-      var cls = 'ym-cell' + (isActive ? ' active' : '') + (isFuture ? ' future' : '');
-      return '<button class="' + cls + '" data-mi="' + i + '"' + (isFuture ? ' disabled' : '') + '>' + m + '</button>';
+      return '<button class="ym-cell' + (isActive ? ' active' : '') + '" data-mi="' + i + '">' + m + '</button>';
     }).join('');
   }
 
@@ -1503,8 +1540,7 @@ function closeModal() {
   });
   document.getElementById('ymNextY').addEventListener('click', function(e) {
     e.stopPropagation();
-    var thisYear = new Date().getFullYear();
-    if (ymDropYear < thisYear) { ymDropYear++; updateYmLabel(); }
+    if (ymDropYear < 2030) { ymDropYear++; updateYmLabel(); }
   });
 
   ymGrid.addEventListener('click', function(e) {
@@ -1547,6 +1583,20 @@ function closeModal() {
     Object.keys(chartInstances).forEach(function(k) {
       try { if (chartInstances[k]) chartInstances[k].resize(); } catch(e) {}
     });
+  });
+
+  // 车型切换（委托监听，元素动态渲染）
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('#overviewModelToggle button');
+    if (!btn) return;
+    var model = btn.dataset.model;
+    if (!model || model === _overviewModel) return;
+    _overviewModel = model;
+    document.querySelectorAll('#overviewModelToggle button').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    _overviewSortKey = 'completion';
+    _overviewSortDir = -1;
+    renderOverviewTable();
   });
 
   // 首次渲染
