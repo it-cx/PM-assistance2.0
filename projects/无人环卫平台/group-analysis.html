@@ -88,6 +88,7 @@ html::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
 }
 .ym-cell:hover { background: var(--bg-card); color: var(--text); }
 .ym-cell.active { background: var(--blue); color: #fff; font-weight: 600; }
+.ym-cell.future { color: #CBD5E1; cursor: not-allowed; pointer-events: none; }
 .btn-export {
   padding: 6px 16px; font-size: 12.5px; color: var(--text-sec); font-weight: 500;
   background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
@@ -1473,9 +1474,14 @@ function closeModal() {
 
   function renderYmGrid() {
     var allMonths = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    var today = new Date();
+    var thisYear = today.getFullYear();
+    var thisMonth = today.getMonth(); // 0-indexed
     ymGrid.innerHTML = allMonths.map(function(m, i) {
       var isActive = (ymDropYear === 2026 && i === currentMonth);
-      return '<button class="ym-cell' + (isActive ? ' active' : '') + '" data-mi="' + i + '">' + m + '</button>';
+      var isFuture = (ymDropYear > thisYear) || (ymDropYear === thisYear && i > thisMonth);
+      var cls = 'ym-cell' + (isActive ? ' active' : '') + (isFuture ? ' future' : '');
+      return '<button class="' + cls + '" data-mi="' + i + '"' + (isFuture ? ' disabled' : '') + '>' + m + '</button>';
     }).join('');
   }
 
@@ -1497,7 +1503,8 @@ function closeModal() {
   });
   document.getElementById('ymNextY').addEventListener('click', function(e) {
     e.stopPropagation();
-    if (ymDropYear < 2030) { ymDropYear++; updateYmLabel(); }
+    var thisYear = new Date().getFullYear();
+    if (ymDropYear < thisYear) { ymDropYear++; updateYmLabel(); }
   });
 
   ymGrid.addEventListener('click', function(e) {
