@@ -838,9 +838,9 @@ function mountOverview() {
   var trendChart = initChart('overviewTrendChart', {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
-    grid: { left: 48, right: 16, top: 20, bottom: 24 },
+    grid: { left: 60, right: 16, top: 20, bottom: 32 },
     xAxis: { type: 'category', data: ['1月','2月','3月','4月','5月','6月'], axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
-    yAxis: { type: 'value', name: 'km', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: 'km', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, nameGap: 8, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: [baseLineOpt(monthlyTotal, '#0EA5E9')]
   });
   if (trendChart) { trendChart.getZr().on('click', function() { openOverviewTrendDetail(monthlyTotal); }); }
@@ -850,9 +850,9 @@ function mountOverview() {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
     legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, top: 0, right: 0, itemWidth: 10, itemHeight: 7 },
-    grid: { left: 48, right: 16, top: 30, bottom: 24 },
+    grid: { left: 60, right: 16, top: 30, bottom: 32 },
     xAxis: { type: 'category', data: ['1月','2月','3月','4月','5月','6月'], axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
-    yAxis: { type: 'value', name: '%', min: 0, max: 100, nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: '%', min: 0, max: 100, nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, nameGap: 8, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: COMPANIES.map(function(name, i) {
       return { name: name, type: 'line', smooth: true, symbol: 'circle', symbolSize: 4,
         data: MONTHLY_TREND[name].completion,
@@ -1164,9 +1164,9 @@ function mountEfficiency() {
         return d[2] + ' · ' + d[3] + ' (' + d[4] + ')<br/>月里程: ' + d[0] + ' km<br/>百km能耗: ' + d[5] + ' kWh<br/>偏离基准: ' + (d[1] >= 0 ? '+' : '') + d[1] + '%';
       }
     },
-    grid: { left: 68, right: 24, top: 20, bottom: 44 },
-    xAxis: { type: 'value', name: '月里程 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
-    yAxis: { type: 'value', name: '偏离基准 (%)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10, formatter: function(v) { return (v >= 0 ? '+' : '') + v + '%'; } }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    grid: { left: 85, right: 28, top: 20, bottom: 56 },
+    xAxis: { type: 'value', name: '月里程 (km)', nameLocation: 'center', nameGap: 32, nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: '偏离基准 (%)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, nameGap: 8, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10, formatter: function(v) { return (v >= 0 ? '+' : '') + v + '%'; } }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: [{
       type: 'scatter', symbolSize: 14, data: scatterData,
       label: { show: true, position: 'top', fontSize: 10, color: '#475569', formatter: function(p) { return p.data.value[3]; } },
@@ -1344,9 +1344,9 @@ function mountSafety() {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, bottom: 0, itemWidth: 10, itemHeight: 7 },
-    grid: { left: 55, right: 16, top: 18, bottom: 36 },
+    grid: { left: 70, right: 16, top: 18, bottom: 42 },
     xAxis: { type: 'category', data: COMPANIES, axisLabel: { color: '#64748B', fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
-    yAxis: { type: 'value', name: '接管次数', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+    yAxis: { type: 'value', name: '接管次数', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, nameGap: 8, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: causeNames.map(function(cause, i) {
       return { name: cause, type: 'bar', stack: 'total', barWidth: 32,
         data: COMPANIES.map(function(name) { return COMPANY_TAKEOVER[name][i].value; }),
@@ -1473,11 +1473,11 @@ function mountValue() {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
     legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, bottom: 0, left: 'center', itemWidth: 10, itemHeight: 7 },
-    grid: { left: 55, right: 62, top: 16, bottom: 36 },
+    grid: { left: 70, right: 75, top: 16, bottom: 44 },
     xAxis: { type: 'category', data: months, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     yAxis: [
-      { type: 'value', name: '里程 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
-      { type: 'value', name: '完成率 (%)', min: 60, max: 100, nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10, formatter: function(v) { return v + '%'; } }, splitLine: { show: false } }
+      { type: 'value', name: '里程 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, nameGap: 8, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
+      { type: 'value', name: '完成率 (%)', min: 60, max: 100, nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, nameGap: 8, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10, formatter: function(v) { return v + '%'; } }, splitLine: { show: false } }
     ],
     series: [
       { name: _currentModel + ' 里程 (km)', type: 'line', smooth: true, symbol: 'none', data: monthlyMileages, lineStyle: { width: 2, color: '#0EA5E9' }, areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#0EA5E933'},{offset:1,color:'transparent'}]) } },
