@@ -709,7 +709,16 @@ function renderOverview() {
   var modelTakeoverRate = agg.mileage > 0 ? agg.takeovers / agg.mileage * 100 : 0;
   var modelAvgMileage = agg.vehicles > 0 ? agg.mileage / agg.vehicles : 0;
 
-  return '<div class="stat-cards">' +
+  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">' +
+    '<div style="font-size:13px;font-weight:600;color:var(--text);">车型视图</div>' +
+    '<div class="model-toggle" id="overviewModelToggle">' +
+      ['SD15', 'SD22C'].map(function(m) {
+        return '<button data-model="' + m + '"' + (m === _overviewModel ? ' class="active"' : '') + '>' + m + '</button>';
+      }).join('') +
+    '</div>' +
+  '</div>' +
+
+  '<div class="stat-cards">' +
     '<div class="stat-card c0"><div class="stat-card-label">' + _overviewModel + ' 清扫总里程</div><div class="stat-card-val" id="ovMileage">' + fmt(agg.mileage) + '<span class="unit">km</span></div><div class="stat-card-sub">' + agg.vehicles + ' 辆车 · ' + agg.companies + ' 家公司</div></div>' +
     '<div class="stat-card c1"><div class="stat-card-label">' + _overviewModel + ' 单车月均里程</div><div class="stat-card-val" id="ovAvgMileage">' + fmt(modelAvgMileage) + '<span class="unit">km</span></div><div class="stat-card-sub">高于基准线 ' + (modelAvgMileage > 40 ? '▲' : '▼') + ' ' + fmt(Math.abs(modelAvgMileage - 40)) + ' km</div></div>' +
     '<div class="stat-card c2"><div class="stat-card-label">' + _overviewModel + ' 百公里能耗</div><div class="stat-card-val" id="ovKwh100">' + fmt(modelKwh100) + '<span class="unit">kWh</span></div><div class="stat-card-sub">车型基准 ' + fmt(USAGE_STANDARD[_overviewModel] * 0.44) + ' kWh</div></div>' +
@@ -717,11 +726,7 @@ function renderOverview() {
   '</div>' +
 
   // 排名表：归一化可比指标
-  '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">项目公司运营排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_ranking\')">?</span><div class="model-toggle" id="overviewModelToggle">' +
-    ['SD15', 'SD22C'].map(function(m) {
-      return '<button data-model="' + m + '"' + (m === _overviewModel ? ' class="active"' : '') + '>' + m + '</button>';
-    }).join('') +
-  '</div><div class="panel-head-tag">按归一化效率指标对比 · 点击表头排序</div></div></div>' +
+  '<div class="panel" style="margin-bottom:14px"><div class="panel-head"><div class="panel-head-title">项目公司运营排名</div><div class="panel-head-right"><span class="insight-btn" onclick="event.stopPropagation();showInsight(\'overview_ranking\')">?</span><div class="panel-head-tag">按归一化效率指标对比 · 点击表头排序</div></div></div>' +
   '<div class="panel-body"><div class="table-wrap"><table class="rank-table"><thead><tr>' +
     '<th onclick="sortOverview(\'name\')">公司<span class="sort-arrow">↕</span></th>' +
     '<th>车辆</th>' +
