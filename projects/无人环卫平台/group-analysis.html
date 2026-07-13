@@ -1169,6 +1169,7 @@ function mountEfficiency() {
     yAxis: { type: 'value', name: '偏离基准 (%)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10, formatter: function(v) { return (v >= 0 ? '+' : '') + v + '%'; } }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: [{
       type: 'scatter', symbolSize: 14, data: scatterData,
+      label: { show: true, position: 'top', fontSize: 10, color: '#475569', formatter: function(p) { return p.data.value[3]; } },
       markLine: { silent: true, symbol: 'none', lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.5 }, label: { color: '#94A3B8', fontSize: 9, formatter: '0% 基准' }, data: [{ yAxis: 0 }] }
     }]
   });
