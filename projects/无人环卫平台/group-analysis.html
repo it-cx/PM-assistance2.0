@@ -937,11 +937,7 @@ function openOverviewCompanyDetail(company) {
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
       legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, bottom: 0, left: 'center', itemWidth: 10, itemHeight: 7 },
-      grid: { left: 52, right: 52, top: 16, bottom: 36 },
-      xAxis: { type: 'category', data: trend.months, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
-      yAxis: [
-        { type: 'value', name: '完成率 (%)', min: 50, max: 105, nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
-        { type: 'value', name: 'kWh/100km', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { show: false } }
+      grid: { left: 55, right: 60, top: 16, bottom: 36 },
       ],
       series: [
         { name: '完成率 (%)', type: 'line', smooth: true, symbol: 'circle', symbolSize: 5, data: trend.completion, lineStyle: { width: 2, color: '#10B981' }, itemStyle: { color: '#10B981' },
@@ -1164,7 +1160,7 @@ function mountEfficiency() {
         return d[2] + ' · ' + d[3] + ' (' + d[4] + ')<br/>月里程: ' + d[0] + ' km<br/>百km能耗: ' + d[5] + ' kWh<br/>偏离基准: ' + (d[1] >= 0 ? '+' : '') + d[1] + '%';
       }
     },
-    grid: { left: 52, right: 24, top: 20, bottom: 40 },
+    grid: { left: 68, right: 24, top: 20, bottom: 44 },
     xAxis: { type: 'value', name: '月里程 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     yAxis: { type: 'value', name: '偏离基准 (%)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10, formatter: function(v) { return (v >= 0 ? '+' : '') + v + '%'; } }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: [{
@@ -1213,7 +1209,7 @@ function mountEfficiency() {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis', valueFormatter: function(v) { return v + ' kWh/100km'; } },
     legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 9 }, top: 0, right: 0, itemWidth: 10, itemHeight: 7 },
-    grid: { left: 48, right: 16, top: 30, bottom: 24 },
+    grid: { left: 62, right: 16, top: 30, bottom: 24 },
     xAxis: { type: 'category', data: months, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     yAxis: { type: 'value', name: 'kWh/100km', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: series
@@ -1239,7 +1235,7 @@ function mountEfficiency() {
   initChart('effHealthChart', {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis', formatter: function(ps) { var k = ps[0].name; return k + ' (' + healthRanges[k] + ')<br/>' + ps[0].value + ' 组'; } },
-    grid: { left: 40, right: 16, top: 28, bottom: 28 },
+    grid: { left: 48, right: 16, top: 28, bottom: 28 },
     xAxis: { type: 'category', data: hKeys, axisLabel: { color: '#64748B', fontSize: 11, interval: 0 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } }, axisTick: { show: false } },
     yAxis: { type: 'value', name: '组数', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } }, minInterval: 1 },
     series: [{
@@ -1344,7 +1340,7 @@ function mountSafety() {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, bottom: 0, itemWidth: 10, itemHeight: 7 },
-    grid: { left: 48, right: 16, top: 18, bottom: 36 },
+    grid: { left: 55, right: 16, top: 18, bottom: 36 },
     xAxis: { type: 'category', data: COMPANIES, axisLabel: { color: '#64748B', fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     yAxis: { type: 'value', name: '接管次数', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: causeNames.map(function(cause, i) {
@@ -1473,7 +1469,7 @@ function mountValue() {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
     legend: { textStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, bottom: 0, left: 'center', itemWidth: 10, itemHeight: 7 },
-    grid: { left: 48, right: 48, top: 16, bottom: 36 },
+    grid: { left: 55, right: 62, top: 16, bottom: 36 },
     xAxis: { type: 'category', data: months, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     yAxis: [
       { type: 'value', name: '里程 (km)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
