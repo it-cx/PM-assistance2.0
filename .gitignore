@@ -23,6 +23,7 @@ Desktop.ini
 # Claude Code runtime
 .claude/jobs/
 .claude/worktrees/
+.claude/scratch/
 .claude/plans/
 .claude/scheduled_tasks.json
 
