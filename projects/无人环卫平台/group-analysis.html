@@ -1164,7 +1164,7 @@ function mountEfficiency() {
         return d[2] + ' · ' + d[3] + ' (' + d[4] + ')<br/>月里程: ' + d[0] + ' km<br/>百km能耗: ' + d[5] + ' kWh<br/>偏离基准: ' + (d[1] >= 0 ? '+' : '') + d[1] + '%';
       }
     },
-    grid: { left: 85, right: 28, top: 20, bottom: 56 },
+    grid: { left: 60, right: 50, top: 20, bottom: 56 },
     xAxis: { type: 'value', name: '月里程 (km)', nameLocation: 'center', nameGap: 32, nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     yAxis: { type: 'value', name: '偏离基准 (%)', nameTextStyle: { color: ECHARTS_TEXT_COLOR, fontSize: 10 }, nameGap: 8, axisLabel: { color: ECHARTS_TEXT_COLOR, fontSize: 10, formatter: function(v) { return (v >= 0 ? '+' : '') + v + '%'; } }, splitLine: { lineStyle: { color: ECHARTS_LINE_COLOR } } },
     series: [{
