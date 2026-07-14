@@ -3,7 +3,7 @@
 **版本**: 1.0
 **日期**: 2026-07-14
 **状态**: Draft
-**关联原型**: [产业集团运营分析](./group-analysis.html) · [项目公司运营看板](./project-dashboard.html)
+**关联原型**: [产业集团运营分析](../无人环卫平台/group-analysis.html) · [项目公司运营看板](../无人环卫平台/project-dashboard.html)
 
 ---
 
