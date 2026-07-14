@@ -3,7 +3,7 @@
 **版本**: 3.0
 **日期**: 2026-07-14
 **状态**: Draft
-**关联原型**: [group-analysis.html](../无人环卫平台/group-analysis.html) · [project-dashboard.html](../无人环卫平台/project-dashboard.html)
+**关联原型**: [group-analysis.html](./group-analysis.html) · [project-dashboard.html](./project-dashboard.html)
 
 ---
 
