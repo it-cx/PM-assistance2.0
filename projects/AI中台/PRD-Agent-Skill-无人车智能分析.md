@@ -214,7 +214,7 @@ Agent: ✅ 已取消任务 T-0719-005 · 指令 ID：CMD-20260722-001
 | MCP 工具调用失败 | "查询 [工具名] 时出现异常，已记录。建议稍后重试或联系管理员。" |
 | 数据不足以支撑分析 | "当前数据无法判断 [具体方向]。建议：① [可补充的数据] ② 安排现场 [检查项]" |
 | 操作确认超时（5 分钟） | "操作确认已超时，如需执行请重新发起。" |
-| token 过期 | "登录已过期，请重新输入账号密码。" |
+| token 过期（静默刷新失败） | "认证已过期，请重新输入账号密码登录。" |
 | 危险操作（下电） | "下电操作将立即中断车辆作业。此操作需要审批，请问是否确认发起审批？" |
 
 ---
@@ -352,21 +352,26 @@ Agent: ✅ 已取消任务 T-0719-005 · 指令 ID：CMD-20260722-001
 ```
 首次对话：
   用户: "@助手 登录 admin 密码 xxx"
-  Agent → 调用认证接口 → 拿到 token
-        → 存储 {feishu_user_id → {account, token}} 到 KV
+  Agent → authenticate(admin, xxx) → 拿到 token
+        → 存储 {feishu_user_id → {account, encrypted_password, token}} 到 KV
         → 回复 "已登录，当前账号：admin，租户：B公司"
 
 后续对话（新会话）：
   用户: "@助手 SD22C-018 能耗？"
-  Agent → 拿 feishu_user_id 查 KV
+  Agent → get_user_token(ou_xxx)
         ├── 有记录 + token 有效 → 直接使用，用户无感
-        ├── 有记录 + token 过期 → 提示"登录已过期，请重新输入密码"
+        ├── 有记录 + token 过期 → 静默调 authenticate(account, password) 刷新 token
+        │                         → 更新 KV → 继续，用户无感
         └── 无记录 → 引导首次登录："请先输入账号密码登录"
+
+用户修改账号：
+  用户: "@助手 切换账号"
+  Agent → 清除 KV 中当前用户的绑定记录 → 引导重新输入账号密码
 ```
 
-**依赖**：Agent 平台支持持久化 KV 存储（跨会话读写）。MCP Server 提供 `get_user_token` / `set_user_token` 两个工具。
+**依赖**：Agent 平台支持持久化 KV 存储（跨会话读写）。MCP Server 提供 `get_user_token` / `set_user_token` / `delete_user_token` 三个工具。
 
-**安全约束**：密码不在任何回答中回显、不记录到对话日志、不在 KV 中存明文密码（只存 token）。
+**安全约束**：密码不在任何回答中回显、不记录到对话日志。KV 中存储的密码需加密（encrypted_password），不允许明文存储。
 
 ## 会话上下文
 
@@ -382,7 +387,7 @@ Agent: ✅ 已取消任务 T-0719-005 · 指令 ID：CMD-20260722-001
 
 | 类型 | 范围 | 内容 | 存储方式 |
 |------|------|------|------|
-| **跨会话记忆** | 永久，按飞书用户 ID | 后台账号、认证 token（密码不存） | MCP KV 存储 `{feishu_user_id → {account, token}}` |
+| **跨会话记忆** | 永久，按飞书用户 ID | 后台账号、加密后的密码、认证 token | MCP KV 存储 `{feishu_user_id → {account, encrypted_password, token}}` |
 | **短期记忆** | 当前会话 | 用户身份、租户 scope、本轮对话中已查询过的车辆/批次/指标、当前确认等待状态 | 对话历史（自然保持） |
 | **业务上下文** | 跨会话不记忆 | 不跨——每个新会话从零开始重建分析上下文 | — |
 
@@ -431,7 +436,7 @@ API 网关 (BFF) · 认证、租户注入、限流
 |---|-----|------|
 | 1 | 交互入口 | 飞书群聊 + 私聊，消息 + 卡片 |
 | 2 | 工具协议 | MCP，由研发设计实现 |
-| 3 | 认证方式 | 首次对话用户输入账号密码 → Agent 调 authenticate 获取 token → 存入 KV（key=飞书用户 ID）。后续会话从 KV 恢复 token，用户无感。token 过期后提示重新输入密码 |
+| 3 | 认证方式 | 首次对话用户输入账号密码 → Agent 调 authenticate 获取 token → 加密存储账号密码+token 到 KV（key=飞书用户 ID）。后续会话从 KV 恢复，token 过期则静默刷新。仅当用户主动要求切换账号时才需重新输入 |
 | 4 | 权限模型 | 后端 API 已有租户过滤能力，Agent 透传身份 |
 | 5 | 推送渠道 | 飞书消息 / 卡片 |
 | 6 | 定时触发 | Agent 平台定时任务 |
@@ -444,17 +449,21 @@ API 网关 (BFF) · 认证、租户注入、限流
 首次对话（飞书用户 ID: ou_xxx）：
   用户: "@助手 登录 admin 密码 xxx"
   Agent → authenticate(admin, xxx) → 拿到 token + tenant_scope
-        → set_user_token(ou_xxx, admin, token, expires_at) → 存入 KV
+        → set_user_token(ou_xxx, admin, encrypted_xxx, token, expires_at) → 存入 KV
         → 回复 "已登录，当前账号：admin，租户：B公司"
 
 后续对话（任何新会话）：
   用户: "@助手 SD22C-018 能耗？"
-  Agent → get_user_token(ou_xxx) → 有记录 + token 有效
-        → 自动注入身份，开始查询（用户无感）
+  Agent → get_user_token(ou_xxx)
+        ├── 有记录 + token 有效 → 自动注入身份（用户无感）
+        ├── 有记录 + token 过期 → 调 authenticate(account, decrypted_password)
+        │                          → 拿到新 token → 更新 KV → 继续（用户无感）
+        │                          仅当刷新失败时才提示"认证已过期，请重新登录"
+        └── 无记录 → 引导首次登录："请先输入账号密码登录"
 
-token 过期：
-  Agent → get_user_token(ou_xxx) → token 已过期
-        → 回复 "登录已过期，请重新输入密码"
+用户切换账号：
+  用户: "@助手 切换账号"
+  Agent → delete_user_token(ou_xxx) → 清除 KV → 引导重新输入账号密码
 ```
 
 ## 4.2 所需工具清单 (MCP Tools)
@@ -464,10 +473,11 @@ token 过期：
 | Tool 名称 | 功能 | 输入参数 | 输出 | 确认 |
 |-----------|------|---------|------|:---:|
 | `authenticate` | 账号密码认证 | `account, password` | `token, tenant_scope, token_expires_at` | 无 |
-| `get_user_token` | 从 KV 读取已存储的 token（跨会话恢复） | `feishu_user_id` | `{account, token, token_expires_at}` 或 null | 无 |
-| `set_user_token` | 存储 token 到 KV（首次绑定 + token 刷新） | `feishu_user_id, account, token, token_expires_at` | `success` | 无 |
+| `get_user_token` | 从 KV 读取已存储的认证信息（跨会话恢复） | `feishu_user_id` | `{account, encrypted_password, token, token_expires_at}` 或 null | 无 |
+| `set_user_token` | 存储认证信息到 KV（首次绑定 + token 刷新） | `feishu_user_id, account, encrypted_password, token, token_expires_at` | `success` | 无 |
+| `delete_user_token` | 删除 KV 中的认证信息（用户切换账号） | `feishu_user_id` | `success` | 无 |
 
-> 飞书用户 ID 与后台账号无关联，Agent 作为中间层做绑定。`feishu_user_id` 来自飞书开放平台的消息事件，Agent 平台可获取。KV 中只存 token，不存明文密码。
+> 飞书用户 ID 与后台账号无关联，Agent 作为中间层做绑定。`feishu_user_id` 来自飞书开放平台的消息事件，Agent 平台可获取。KV 中密码需加密存储（encrypted_password），不允许明文。token 过期时 Agent 静默刷新，不打扰用户。
 
 ### 数据查询工具
 
