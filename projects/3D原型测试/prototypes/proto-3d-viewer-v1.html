@@ -313,11 +313,11 @@ a:hover { text-decoration: underline; }
   var flowDots = [];
   var flowGroup = new THREE.Group();
   flowGroup.name = '流光';
-  var dotGeo = new THREE.SphereGeometry(0.005, 8, 8);
+  var dotGeo = new THREE.SphereGeometry(0.004, 6, 6);
 
-  // Shared trail stripe geometry (reused, just repositioned per frame)
-  var trailStripeGeo = new THREE.PlaneGeometry(0.003, 0.04);
-  var trailStripes = []; // { mesh, curve, t, speed }
+  // Shared trail stripe geometry
+  var trailStripeGeo = new THREE.PlaneGeometry(0.0015, 0.02);
+  var trailStripes = []; // { mesh, curve, t, speed, lag }
 
   // ── Create each flyline ───────────────────────────────
   for (var i = 0; i < allDest.length; i++) {
@@ -336,29 +336,29 @@ a:hover { text-decoration: underline; }
     var hexGold = goldColor.getHex();
 
     // Layer 1: Glow tube (wide, transparent, additive)
-    var glowTubeGeo = new THREE.TubeGeometry(curve, 40, 0.016, 6, false);
+    var glowTubeGeo = new THREE.TubeGeometry(curve, 30, 0.006, 5, false);
     var glowTubeMat = new THREE.MeshBasicMaterial({
       color: hexGold,
       transparent: true,
-      opacity: 0.12 + Math.random() * 0.06,
+      opacity: 0.08 + Math.random() * 0.04,
       depthTest: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
     flyGroup.add(new THREE.Mesh(glowTubeGeo, glowTubeMat));
 
-    // Layer 2: Core tube (narrower, solid)
-    var coreTubeGeo = new THREE.TubeGeometry(curve, 40, 0.004, 6, false);
+    // Layer 2: Core tube (thin, sharp)
+    var coreTubeGeo = new THREE.TubeGeometry(curve, 30, 0.002, 5, false);
     var coreTubeMat = new THREE.MeshBasicMaterial({
       color: hexGold,
       transparent: true,
-      opacity: 0.55 + Math.random() * 0.25,
+      opacity: 0.4 + Math.random() * 0.2,
       depthTest: true,
       depthWrite: false
     });
     flyGroup.add(new THREE.Mesh(coreTubeGeo, coreTubeMat));
 
-    // Layer 3: Flow dot (firefly head)
+    // Layer 3: Flow dot — bright white head
     var dotMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
@@ -376,37 +376,34 @@ a:hover { text-decoration: underline; }
       speed: 0.05 + Math.random() * 0.1
     });
 
-    // Layer 4: Trailing stripes (3–4 per flyline, lag behind the head)
-    var stripeCount = 3 + Math.floor(Math.random() * 2);
-    for (var s = 0; s < stripeCount; s++) {
-      var lag = 0.015 + s * 0.025 + Math.random() * 0.01;
-      var stripeMat = new THREE.MeshBasicMaterial({
-        color: (s === 0) ? 0xffffff : hexGold,
-        transparent: true,
-        opacity: 0.9 - s * 0.2,
-        depthTest: true,
-        depthWrite: false,
-        blending: s === 0 ? THREE.NormalBlending : THREE.AdditiveBlending,
-        side: THREE.DoubleSide
-      });
-      var stripe = new THREE.Mesh(trailStripeGeo, stripeMat);
-      stripe.position.copy(curve.getPoint(Math.max(0, 0.01 - lag)));
-      flowGroup.add(stripe);
-      trailStripes.push({
-        mesh: stripe,
-        curve: curve,
-        t: 0.01 - lag,
-        speed: 0.05 + Math.random() * 0.1,
-        lag: lag
-      });
-    }
+    // Layer 4: Single trailing stripe (subtle, close behind head)
+    var lag = 0.01 + Math.random() * 0.01;
+    var stripeMat = new THREE.MeshBasicMaterial({
+      color: hexGold,
+      transparent: true,
+      opacity: 0.6,
+      depthTest: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide
+    });
+    var stripe = new THREE.Mesh(trailStripeGeo, stripeMat);
+    stripe.position.copy(curve.getPoint(Math.max(0, 0.01 - lag)));
+    flowGroup.add(stripe);
+    trailStripes.push({
+      mesh: stripe,
+      curve: curve,
+      t: 0.01 - lag,
+      speed: 0.05 + Math.random() * 0.1,
+      lag: lag
+    });
   }
 
   flyGroup.add(flowGroup);
 
-  // ── Longyan origin: multi-ring pulse ──────────────────
-  // Inner bright core
-  var innerGeo = new THREE.SphereGeometry(0.022, 16, 16);
+  // ── Longyan origin: compact beacon ───────────────────
+  // Small bright core — reads as "here" without blocking China
+  var innerGeo = new THREE.SphereGeometry(0.012, 16, 16);
   var innerMat = new THREE.MeshBasicMaterial({
     color: 0xffffff,
     transparent: true,
@@ -418,12 +415,12 @@ a:hover { text-decoration: underline; }
   innerDot.position.copy(longyan);
   flyGroup.add(innerDot);
 
-  // Outer glow
-  var originGlowGeo = new THREE.SphereGeometry(0.035, 16, 16);
+  // Subtle golden halo
+  var originGlowGeo = new THREE.SphereGeometry(0.02, 16, 16);
   var originGlowMat = new THREE.MeshBasicMaterial({
     color: 0xffcc00,
     transparent: true,
-    opacity: 0.5,
+    opacity: 0.35,
     depthTest: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending
@@ -432,12 +429,12 @@ a:hover { text-decoration: underline; }
   originGlow.position.copy(longyan);
   flyGroup.add(originGlow);
 
-  // Pulse ring
-  var ringGeo = new THREE.TorusGeometry(0.04, 0.003, 8, 32);
+  // Thin pulse ring
+  var ringGeo = new THREE.TorusGeometry(0.025, 0.0015, 6, 24);
   var ringMat = new THREE.MeshBasicMaterial({
     color: 0xffd700,
     transparent: true,
-    opacity: 0.6,
+    opacity: 0.45,
     depthTest: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending
@@ -446,15 +443,30 @@ a:hover { text-decoration: underline; }
   originRing.position.copy(longyan);
   flyGroup.add(originRing);
 
-  // ── Destination dots ──────────────────────────────────
+  // ──"Longyan" label dot: slightly larger disc flush to surface ──
+  var labelGeo = new THREE.CircleGeometry(0.015, 16);
+  var labelMat = new THREE.MeshBasicMaterial({
+    color: 0xffd700,
+    transparent: true,
+    opacity: 0.85,
+    depthTest: true,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+  var labelDot = new THREE.Mesh(labelGeo, labelMat);
+  labelDot.position.copy(latLonToVec3(LONGYAN_LAT, LONGYAN_LON, 1.008));
+  labelDot.lookAt(new THREE.Vector3(0, 0, 0));
+  flyGroup.add(labelDot);
+
+  // ── Destination dots: smaller, cleaner ───────────────
   for (var j = 0; j < allDest.length; j++) {
     var dd = allDest[j];
     var dp = latLonToVec3(dd.lat, dd.lon, 1.006);
-    var dg = new THREE.SphereGeometry(0.007, 8, 8);
+    var dg = new THREE.SphereGeometry(0.004, 6, 6);
     var dm = new THREE.MeshBasicMaterial({
       color: j < 30 ? 0xffd700 : 0xffb833,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.7,
       depthTest: true,
       depthWrite: false
     });
@@ -505,32 +517,29 @@ a:hover { text-decoration: underline; }
       fd.dot.material.opacity = 0.4 + 0.55 * (1.0 - Math.abs(fd.t - 0.5) * 2.0);
     }
 
-    // Trailing stripes follow their head with lag
+    // Trailing stripe: tight follow, subtle fade
     for (var si = 0; si < trailStripes.length; si++) {
       var ts = trailStripes[si];
       ts.t += ts.speed * dt;
       if (ts.t > 1.0) ts.t -= 1.0;
-      // Stripe position = head position minus lag offset
       var stripeT = Math.max(0, ts.t - ts.lag);
       ts.mesh.position.copy(ts.curve.getPoint(stripeT));
-      // Orient stripe to face the camera (billboard)
       ts.mesh.lookAt(camera.position);
-      // Fade : closer to head = brighter
       var distFromHead = ts.t - stripeT;
-      ts.mesh.material.opacity = Math.max(0.1, 0.85 - distFromHead * 12);
+      ts.mesh.material.opacity = Math.max(0.08, 0.55 - distFromHead * 18);
     }
 
-    // Origin pulse: inner flicker + ring expand + outer glow
+    // Origin pulse: subtle, not overwhelming
     if (!noMotion) {
       var t = elapsedTime;
-      innerDot.material.opacity = 0.8 + Math.sin(t * 5.0) * 0.2;
-      innerDot.scale.setScalar(1.0 + Math.sin(t * 4.0) * 0.1);
-      originGlow.material.opacity = 0.35 + Math.sin(t * 3.0) * 0.2;
-      originGlow.scale.setScalar(1.0 + Math.sin(t * 2.5) * 0.25);
-      // Expanding ring
-      var ringScale = 1.0 + (Math.sin(t * 2.0) * 0.5 + 0.5) * 1.8;
+      innerDot.material.opacity = 0.8 + Math.sin(t * 4.0) * 0.15;
+      originGlow.material.opacity = 0.25 + Math.sin(t * 2.5) * 0.1;
+      originGlow.scale.setScalar(1.0 + Math.sin(t * 2.0) * 0.12);
+      var ringScale = 1.0 + (Math.sin(t * 1.8) * 0.5 + 0.5) * 0.6;
       originRing.scale.setScalar(ringScale);
-      originRing.material.opacity = 0.15 + (1.0 - (ringScale - 1.0) / 1.8) * 0.55;
+      originRing.material.opacity = 0.1 + (1.0 - (ringScale - 1.0) / 0.6) * 0.3;
+      // Label dot pulses gently
+      labelDot.material.opacity = 0.65 + Math.sin(t * 3.0) * 0.2;
     }
 
     // Rotation
