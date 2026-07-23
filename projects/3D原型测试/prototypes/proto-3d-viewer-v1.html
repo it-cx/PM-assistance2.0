@@ -269,7 +269,7 @@ a:hover { text-decoration: underline; }
   scene.add(stars);
 
   // ═══════════════════════════════════════════════════════
-  //  GOLDEN FLYLINES — 3-layer design
+  //  GOLDEN FLYLINES — TubeGeometry for real width + glow
   // ═══════════════════════════════════════════════════════
   var LONGYAN_LAT = 25.075, LONGYAN_LON = 117.014;
   var flyGroup = new THREE.Group();
@@ -313,7 +313,8 @@ a:hover { text-decoration: underline; }
   var flowDots = [];
   var flowGroup = new THREE.Group();
   flowGroup.name = '流光';
-  var dotGeo = new THREE.SphereGeometry(0.0035, 6, 6);
+  // Larger brighter dot, like a firefly
+  var dotGeo = new THREE.SphereGeometry(0.006, 8, 8);
 
   // ── Create each flyline ───────────────────────────────
   for (var i = 0; i < allDest.length; i++) {
@@ -330,35 +331,36 @@ a:hover { text-decoration: underline; }
     var sat = 0.85 + Math.random() * 0.15;
     var light = isChina ? 0.58 + Math.random() * 0.2 : 0.48 + Math.random() * 0.2;
     var goldColor = new THREE.Color().setHSL(hue, sat, light);
+    var hexGold = goldColor.getHex();
 
-    // Layer 1: Wide glow (additive blending)
-    var glowGeo = new THREE.BufferGeometry().setFromPoints(pts);
-    var glowMat = new THREE.LineBasicMaterial({
-      color: goldColor,
+    // Layer 1: Glow tube (wide, transparent, additive)
+    var glowTubeGeo = new THREE.TubeGeometry(curve, 80, 0.018, 8, false);
+    var glowTubeMat = new THREE.MeshBasicMaterial({
+      color: hexGold,
       transparent: true,
-      opacity: 0.10 + Math.random() * 0.08,
+      opacity: 0.15 + Math.random() * 0.08,
       depthTest: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
-    flyGroup.add(new THREE.Line(glowGeo, glowMat));
+    flyGroup.add(new THREE.Mesh(glowTubeGeo, glowTubeMat));
 
-    // Layer 2: Bright core
-    var coreGeo = new THREE.BufferGeometry().setFromPoints(pts);
-    var coreMat = new THREE.LineBasicMaterial({
-      color: goldColor,
+    // Layer 2: Core tube (narrower, solid-ish)
+    var coreTubeGeo = new THREE.TubeGeometry(curve, 80, 0.006, 8, false);
+    var coreTubeMat = new THREE.MeshBasicMaterial({
+      color: hexGold,
       transparent: true,
-      opacity: 0.42 + Math.random() * 0.28,
+      opacity: 0.65 + Math.random() * 0.25,
       depthTest: true,
       depthWrite: false
     });
-    flyGroup.add(new THREE.Line(coreGeo, coreMat));
+    flyGroup.add(new THREE.Mesh(coreTubeGeo, coreTubeMat));
 
-    // Layer 3: Flow dot
+    // Layer 3: Flow dot (firefly)
     var dotMat = new THREE.MeshBasicMaterial({
       color: 0xffe080,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       depthTest: true,
       depthWrite: false
     });
@@ -375,18 +377,47 @@ a:hover { text-decoration: underline; }
 
   flyGroup.add(flowGroup);
 
-  // ── Longyan origin glow ───────────────────────────────
-  var originGlowGeo = new THREE.SphereGeometry(0.024, 16, 16);
-  var originGlowMat = new THREE.MeshBasicMaterial({
-    color: 0xffd700,
+  // ── Longyan origin: multi-ring pulse ──────────────────
+  // Inner bright core
+  var innerGeo = new THREE.SphereGeometry(0.022, 16, 16);
+  var innerMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.95,
     depthTest: true,
     depthWrite: false
+  });
+  var innerDot = new THREE.Mesh(innerGeo, innerMat);
+  innerDot.position.copy(longyan);
+  flyGroup.add(innerDot);
+
+  // Outer glow
+  var originGlowGeo = new THREE.SphereGeometry(0.035, 16, 16);
+  var originGlowMat = new THREE.MeshBasicMaterial({
+    color: 0xffcc00,
+    transparent: true,
+    opacity: 0.5,
+    depthTest: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
   });
   var originGlow = new THREE.Mesh(originGlowGeo, originGlowMat);
   originGlow.position.copy(longyan);
   flyGroup.add(originGlow);
+
+  // Pulse ring
+  var ringGeo = new THREE.TorusGeometry(0.04, 0.003, 8, 32);
+  var ringMat = new THREE.MeshBasicMaterial({
+    color: 0xffd700,
+    transparent: true,
+    opacity: 0.6,
+    depthTest: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  var originRing = new THREE.Mesh(ringGeo, ringMat);
+  originRing.position.copy(longyan);
+  flyGroup.add(originRing);
 
   // ── Destination dots ──────────────────────────────────
   for (var j = 0; j < allDest.length; j++) {
@@ -447,11 +478,17 @@ a:hover { text-decoration: underline; }
       fd.dot.material.opacity = 0.2 + 0.6 * (1.0 - Math.abs(fd.t - 0.5) * 2.0);
     }
 
-    // Origin pulse
+    // Origin pulse: inner flicker + ring expand + outer glow
     if (!noMotion) {
-      var pulse = 1.0 + Math.sin(elapsedTime * 3.0) * 0.2;
-      originGlow.scale.setScalar(pulse);
-      originGlow.material.opacity = 0.65 + Math.sin(elapsedTime * 3.0) * 0.3;
+      var t = elapsedTime;
+      innerDot.material.opacity = 0.8 + Math.sin(t * 5.0) * 0.2;
+      innerDot.scale.setScalar(1.0 + Math.sin(t * 4.0) * 0.1);
+      originGlow.material.opacity = 0.35 + Math.sin(t * 3.0) * 0.2;
+      originGlow.scale.setScalar(1.0 + Math.sin(t * 2.5) * 0.25);
+      // Expanding ring
+      var ringScale = 1.0 + (Math.sin(t * 2.0) * 0.5 + 0.5) * 1.8;
+      originRing.scale.setScalar(ringScale);
+      originRing.material.opacity = 0.15 + (1.0 - (ringScale - 1.0) / 1.8) * 0.55;
     }
 
     // Rotation
