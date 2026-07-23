@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Earth — Three.js WebGL</title>
+
+<link rel="preload" as="image" href="https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg" crossorigin="anonymous">
+<link rel="preload" as="image" href="https://threejs.org/examples/textures/planets/earth_lights_2048.png" crossorigin="anonymous">
+<link rel="preload" as="image" href="https://threejs.org/examples/textures/planets/earth_specular_2048.jpg" crossorigin="anonymous">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root { --accent: #f0c040; }
+
+html, body {
+  height: 100%; overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px; line-height: 1.5; color: #fff; background: #000;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: #7ab8e0; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+#three-canvas { position: fixed; inset: 0; display: block; }
+
+/* Info overlay */
+#info {
+  position: fixed; top: 20px; left: 24px; z-index: 10; pointer-events: none;
+}
+#info > * { pointer-events: auto; }
+#info .title { font-size: 22px; font-weight: 600; }
+#info .sub { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.6; display: block; }
+#info .sub a { color: rgba(255,255,255,0.5); }
+
+/* Hint bar */
+#hint-bar {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 20;
+  display: flex; gap: 20px; align-items: center;
+  padding: 10px 20px;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 100px;
+  font-size: 12px; color: rgba(255,255,255,0.5);
+  transition: opacity 0.4s;
+  opacity: 0;
+}
+#hint-bar .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+/* Loading overlay */
+#loading-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #000;
+  transition: opacity 0.5s;
+}
+#loading-overlay.hidden { opacity: 0; pointer-events: none; }
+#loading-text { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 16px; letter-spacing: 0.04em; }
+#loading-bar-track { width: 260px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+#loading-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+#loading-pct { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 10px; }
+
+@media (max-width: 480px) {
+  #info { top: 12px; left: 16px; }
+  #info .title { font-size: 18px; }
+  #hint-bar { gap: 12px; padding: 8px 16px; font-size: 11px; bottom: 16px; }
+  #loading-bar-track { width: 200px; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div id="loading-text">加载地球纹理…</div>
+  <div id="loading-bar-track"><div id="loading-bar-fill"></div></div>
+  <div id="loading-pct">0%</div>
+</div>
+
+<canvas id="three-canvas" role="img" aria-label="科幻荧光地球，从中国龙岩放射金色飞线至全球40个城市。拖拽旋转，滚轮缩放。"></canvas>
+
+<div id="info">
+  <div class="title">Longyan to the World</div>
+  <small class="sub">中国龙岩 → 全球 40 个城市<br>地球纹理来自 <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a></small>
+</div>
+
+<div id="hint-bar">
+  <span><span class="dot"></span> 拖拽旋转</span>
+  <span><span class="dot"></span> 滚轮缩放</span>
+  <span><span class="dot"></span> 自动旋转</span>
+</div>
+
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+(function() {
+  var canvas = document.getElementById('three-canvas');
+  var hintBar = document.getElementById('hint-bar');
+  var loadingOverlay = document.getElementById('loading-overlay');
+  var loadingBarFill = document.getElementById('loading-bar-fill');
+  var loadingPct = document.getElementById('loading-pct');
+  var loadingText = document.getElementById('loading-text');
+
+  // ── Reduced motion ────────────────────────────────────
+  var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var noMotion = mq.matches;
+  mq.addEventListener('change', function(e) { noMotion = e.matches; });
+
+  // ── Scene / Camera / Renderer ─────────────────────────
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(28, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+  camera.position.set(4, 1.8, 3.5);
+  camera.lookAt(0, 0, 0);
+
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+
+  // ── Lighting ──────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0x0a0a1a, 0.3));
+  var sun = new THREE.DirectionalLight(0xffffff, 3.0);
+  sun.position.set(5, 0.3, 2);
+  scene.add(sun);
+
+  // ── Loading manager ───────────────────────────────────
+  var lm = new THREE.LoadingManager();
+  lm.onProgress = function(url, loaded, total) {
+    var pct = Math.round((loaded / total) * 100);
+    loadingBarFill.style.width = pct + '%';
+    loadingPct.textContent = pct + '%';
+    loadingText.textContent = '加载中… ' + url.split('/').pop();
+  };
+  lm.onLoad = function() {
+    loadingText.textContent = '加载完成';
+    setTimeout(function() {
+      loadingOverlay.classList.add('hidden');
+      hintBar.style.opacity = '1';
+    }, 400);
+  };
+  var texLoader = new THREE.TextureLoader(lm);
+  var baseUrl = 'https://threejs.org/examples/textures/planets/';
+
+  // ── Earth: ShaderMaterial ─────────────────────────────
+  var earthGeo = new THREE.SphereGeometry(1, 72, 72);
+  var earthUniforms = {
+    dayTexture:     { value: null },
+    nightTexture:   { value: null },
+    specularTexture:{ value: null },
+    sunDirection:   { value: sun.position.clone().normalize() },
+    uTime:          { value: 0 }
+  };
+
+  var earthVert = [
+    'varying vec3 vWN; varying vec3 vWP; varying vec2 vUv;',
+    'void main() {',
+    '  vec4 wp=modelMatrix*vec4(position,1.0);',
+    '  vWP=wp.xyz; vWN=normalize(mat3(modelMatrix)*normal); vUv=uv;',
+    '  gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);',
+    '}'
+  ].join('\n');
+
+  var earthFrag = [
+    'uniform sampler2D dayTexture;',
+    'uniform sampler2D nightTexture;',
+    'uniform sampler2D specularTexture;',
+    'uniform vec3 sunDirection;',
+    'uniform float uTime;',
+    'varying vec3 vWN; varying vec3 vWP; varying vec2 vUv;',
+    'void main() {',
+    '  vec3 N=normalize(vWN), V=normalize(cameraPosition-vWP), L=normalize(sunDirection), H=normalize(L+V);',
+    '  float NdotL=dot(N,L), NdotV=abs(dot(N,V)), NdotH=max(dot(N,H),0.0);',
+    '  float fresnel=1.0-NdotV, f2=fresnel*fresnel;',
+    '  vec4 day=texture2D(dayTexture,vUv);',
+    '  vec4 night=texture2D(nightTexture,vUv);',
+    '  vec4 spec=texture2D(specularTexture,vUv);',
+    '  float ocean=spec.r, clouds=spec.b;',
+    '  float sPow=2.0/(0.08*0.08)-2.0;',
+    '  float oceanSpec=pow(NdotH,sPow)*ocean*mix(0.0,1.5,fresnel)*smoothstep(0.0,0.3,NdotL);',
+    '  float dayS=smoothstep(-0.15,0.45,NdotL);',
+    '  float nightS=1.0-smoothstep(-0.3,0.2,NdotL);',
+    '  vec3 dayC=day.rgb*(1.0+clouds*0.25*dayS);',
+    '  vec3 nightG=night.rgb*2.5;',
+    '  nightG=mix(nightG,nightG*vec3(0.5,0.8,1.4),0.6);',
+    '  vec3 atmoD=vec3(0.20,0.55,0.95), atmoT=vec3(0.85,0.35,0.15);',
+    '  vec3 atmoC=mix(atmoT,atmoD,smoothstep(-0.25,0.7,NdotL));',
+    '  float atmoS=f2*fresnel*1.8*smoothstep(-0.4,1.0,NdotL);',
+    '  vec3 color=mix(nightG,dayC,dayS);',
+    '  color+=vec3(0.35,0.55,0.9)*oceanSpec*0.6;',
+    '  color+=atmoC*atmoS*0.55;',
+    '  color=mix(color,color*vec3(0.6,0.7,1.0),nightS*0.2);',
+    '  color*=1.0+sin(NdotL*6.28+uTime*0.3)*0.012;',
+    '  gl_FragColor=vec4(color,1.0);',
+    '}'
+  ].join('\n');
+
+  var earthMat = new THREE.ShaderMaterial({
+    uniforms: earthUniforms,
+    vertexShader: earthVert,
+    fragmentShader: earthFrag
+  });
+
+  var globe = new THREE.Mesh(earthGeo, earthMat);
+  scene.add(globe);
+
+  // Load textures
+  texLoader.load(baseUrl + 'earth_atmos_2048.jpg', function(t) {
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    earthUniforms.dayTexture.value = t;
+  });
+  texLoader.load(baseUrl + 'earth_specular_2048.jpg', function(t) {
+    t.anisotropy = 8;
+    earthUniforms.specularTexture.value = t;
+  });
+  texLoader.load(baseUrl + 'earth_lights_2048.png', function(t) {
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    earthUniforms.nightTexture.value = t;
+  });
+
+  // ── Atmosphere shell ──────────────────────────────────
+  var atmoMat = new THREE.ShaderMaterial({
+    uniforms: {
+      sunDirection: { value: sun.position.clone().normalize() },
+      atmoD: { value: new THREE.Color('#4db2ff') },
+      atmoT: { value: new THREE.Color('#bc490b') }
+    },
+    vertexShader: [
+      'varying vec3 vWN; varying vec3 vWP;',
+      'void main() {',
+      '  vec4 wp=modelMatrix*vec4(position,1.0);',
+      '  vWP=wp.xyz; vWN=normalize(mat3(modelMatrix)*normal);',
+      '  gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);',
+      '}'
+    ].join('\n'),
+    fragmentShader: [
+      'uniform vec3 sunDirection; uniform vec3 atmoD; uniform vec3 atmoT;',
+      'varying vec3 vWN; varying vec3 vWP;',
+      'void main() {',
+      '  vec3 V=normalize(cameraPosition-vWP), N=normalize(vWN), L=normalize(sunDirection);',
+      '  float f=1.0-abs(dot(V,N)), sunO=dot(N,L);',
+      '  vec3 c=mix(atmoT,atmoD,smoothstep(-0.25,0.75,sunO));',
+      '  float a=smoothstep(0.68,1.0,f); a=pow(a,2.5)*smoothstep(-0.5,1.0,sunO);',
+      '  gl_FragColor=vec4(c,a*0.75);',
+      '}'
+    ].join('\n'),
+    side: THREE.BackSide, transparent: true, depthWrite: false
+  });
+  var atmosphere = new THREE.Mesh(earthGeo, atmoMat);
+  atmosphere.scale.setScalar(1.035);
+  scene.add(atmosphere);
+
+  // ── Stars ─────────────────────────────────────────────
+  var starsGeo = new THREE.BufferGeometry();
+  var starCount = 2000, starPos = new Float32Array(starCount * 3);
+  for (var i = 0; i < starCount * 3; i += 3) {
+    var r = 30 + Math.random() * 20;
+    var th = Math.random() * Math.PI * 2;
+    var ph = Math.acos(2 * Math.random() - 1);
+    starPos[i] = r * Math.sin(ph) * Math.cos(th);
+    starPos[i+1] = r * Math.sin(ph) * Math.sin(th);
+    starPos[i+2] = r * Math.cos(ph);
+  }
+  starsGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  var stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({
+    size: 0.04, color: 0xffffff, transparent: true, opacity: 0.7, depthWrite: false
+  }));
+  scene.add(stars);
+
+  // ═══════════════════════════════════════════════════════
+  //  GOLDEN FLYLINES — 3-layer design
+  // ═══════════════════════════════════════════════════════
+  var LONGYAN_LAT = 25.075, LONGYAN_LON = 117.014;
+  var flyGroup = new THREE.Group();
+  flyGroup.name = '飞线';
+  globe.add(flyGroup);
+
+  function latLonToVec3(lat, lon, radius) {
+    var phi = (90 - lat) * Math.PI / 180;
+    var theta = (lon + 180) * Math.PI / 180;
+    return new THREE.Vector3(
+      -radius * Math.sin(phi) * Math.cos(theta),
+       radius * Math.cos(phi),
+       radius * Math.sin(phi) * Math.sin(theta)
+    );
+  }
+
+  var chinaCities = [
+    { lat: 39.904, lon: 116.407 },{ lat: 31.230, lon: 121.474 },{ lat: 23.129, lon: 113.264 },
+    { lat: 22.543, lon: 114.058 },{ lat: 30.573, lon: 104.067 },{ lat: 29.563, lon: 106.551 },
+    { lat: 30.593, lon: 114.305 },{ lat: 34.341, lon: 108.940 },{ lat: 32.060, lon: 118.797 },
+    { lat: 30.274, lon: 120.155 },{ lat: 28.228, lon: 112.939 },{ lat: 34.747, lon: 113.625 },
+    { lat: 36.651, lon: 116.986 },{ lat: 36.067, lon: 120.383 },{ lat: 38.914, lon: 121.615 },
+    { lat: 41.806, lon: 123.432 },{ lat: 45.803, lon: 126.535 },{ lat: 25.039, lon: 102.718 },
+    { lat: 26.647, lon: 106.630 },{ lat: 22.817, lon: 108.367 },{ lat: 26.074, lon: 119.297 },
+    { lat: 31.821, lon: 117.229 },{ lat: 28.682, lon: 115.858 },{ lat: 37.871, lon: 112.549 },
+    { lat: 36.061, lon: 103.834 },{ lat: 43.825, lon: 87.617  },{ lat: 29.650, lon: 91.100  },
+    { lat: 36.617, lon: 101.779 },{ lat: 38.487, lon: 106.231 },{ lat: 40.842, lon: 111.749 }
+  ];
+
+  var worldCities = [
+    { lat: -1.292, lon: 36.822  },{ lat: -33.925,lon: 18.424  },{ lat: 48.857, lon: 2.352   },
+    { lat: 52.520, lon: 13.405  },{ lat: 14.600, lon: 120.984 },{ lat: 10.315, lon: 123.885 },
+    { lat: 35.676, lon: 139.650 },{ lat: 34.694, lon: 135.502 },{ lat: 6.524,  lon: 3.379   },
+    { lat: 9.032,  lon: 38.747  }
+  ];
+
+  var allDest = chinaCities.concat(worldCities);
+  var longyan = latLonToVec3(LONGYAN_LAT, LONGYAN_LON, 1.005);
+
+  // ── Flow dot data ─────────────────────────────────────
+  var flowDots = [];
+  var flowGroup = new THREE.Group();
+  flowGroup.name = '流光';
+  var dotGeo = new THREE.SphereGeometry(0.0035, 6, 6);
+
+  // ── Create each flyline ───────────────────────────────
+  for (var i = 0; i < allDest.length; i++) {
+    var d = allDest[i];
+    var dst = latLonToVec3(d.lat, d.lon, 1.005);
+    var isChina = i < 30;
+
+    var mid = new THREE.Vector3().addVectors(longyan, dst).multiplyScalar(0.5);
+    mid.normalize().multiplyScalar(1.25 + Math.random() * 0.55);
+    var curve = new THREE.QuadraticBezierCurve3(longyan.clone(), mid, dst.clone());
+    var pts = curve.getPoints(120);
+
+    var hue = 0.115 + Math.random() * 0.035;
+    var sat = 0.85 + Math.random() * 0.15;
+    var light = isChina ? 0.58 + Math.random() * 0.2 : 0.48 + Math.random() * 0.2;
+    var goldColor = new THREE.Color().setHSL(hue, sat, light);
+
+    // Layer 1: Wide glow (additive blending)
+    var glowGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    var glowMat = new THREE.LineBasicMaterial({
+      color: goldColor,
+      transparent: true,
+      opacity: 0.10 + Math.random() * 0.08,
+      depthTest: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    flyGroup.add(new THREE.Line(glowGeo, glowMat));
+
+    // Layer 2: Bright core
+    var coreGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    var coreMat = new THREE.LineBasicMaterial({
+      color: goldColor,
+      transparent: true,
+      opacity: 0.42 + Math.random() * 0.28,
+      depthTest: true,
+      depthWrite: false
+    });
+    flyGroup.add(new THREE.Line(coreGeo, coreMat));
+
+    // Layer 3: Flow dot
+    var dotMat = new THREE.MeshBasicMaterial({
+      color: 0xffe080,
+      transparent: true,
+      opacity: 0.85,
+      depthTest: true,
+      depthWrite: false
+    });
+    var dot = new THREE.Mesh(dotGeo, dotMat);
+    dot.position.copy(curve.getPoint(0));
+    flowGroup.add(dot);
+    flowDots.push({
+      dot: dot,
+      curve: curve,
+      t: Math.random(),
+      speed: 0.04 + Math.random() * 0.08
+    });
+  }
+
+  flyGroup.add(flowGroup);
+
+  // ── Longyan origin glow ───────────────────────────────
+  var originGlowGeo = new THREE.SphereGeometry(0.024, 16, 16);
+  var originGlowMat = new THREE.MeshBasicMaterial({
+    color: 0xffd700,
+    transparent: true,
+    opacity: 0.9,
+    depthTest: true,
+    depthWrite: false
+  });
+  var originGlow = new THREE.Mesh(originGlowGeo, originGlowMat);
+  originGlow.position.copy(longyan);
+  flyGroup.add(originGlow);
+
+  // ── Destination dots ──────────────────────────────────
+  for (var j = 0; j < allDest.length; j++) {
+    var dd = allDest[j];
+    var dp = latLonToVec3(dd.lat, dd.lon, 1.006);
+    var dg = new THREE.SphereGeometry(0.007, 8, 8);
+    var dm = new THREE.MeshBasicMaterial({
+      color: j < 30 ? 0xffd700 : 0xffb833,
+      transparent: true,
+      opacity: 0.8,
+      depthTest: true,
+      depthWrite: false
+    });
+    var destDot = new THREE.Mesh(dg, dm);
+    destDot.position.copy(dp);
+    flyGroup.add(destDot);
+  }
+
+  // ── OrbitControls ─────────────────────────────────────
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 1.8;
+  controls.maxDistance = 15;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.25;
+  controls.update();
+
+  // ── Resize ────────────────────────────────────────────
+  var ro = new ResizeObserver(function(entries) {
+    var w = entries[0].contentRect.width, h = entries[0].contentRect.height;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  });
+  ro.observe(canvas.parentElement || document.body);
+
+  // ── Animate ───────────────────────────────────────────
+  var clock = new THREE.Clock();
+  var elapsedTime = 0;
+
+  function animate() {
+    var dt = Math.min(clock.getDelta(), 0.1);
+    elapsedTime += dt;
+
+    var sunDir = sun.position.clone().normalize();
+    earthUniforms.sunDirection.value.copy(sunDir);
+    earthUniforms.uTime.value = elapsedTime;
+    atmosphere.material.uniforms.sunDirection.value.copy(sunDir);
+
+    // Flow dots
+    for (var fi = 0; fi < flowDots.length; fi++) {
+      var fd = flowDots[fi];
+      fd.t += fd.speed * dt;
+      if (fd.t > 1.0) fd.t -= 1.0;
+      fd.dot.position.copy(fd.curve.getPoint(fd.t));
+      // Brightest mid-journey, dim near endpoints
+      fd.dot.material.opacity = 0.2 + 0.6 * (1.0 - Math.abs(fd.t - 0.5) * 2.0);
+    }
+
+    // Origin pulse
+    if (!noMotion) {
+      var pulse = 1.0 + Math.sin(elapsedTime * 3.0) * 0.2;
+      originGlow.scale.setScalar(pulse);
+      originGlow.material.opacity = 0.65 + Math.sin(elapsedTime * 3.0) * 0.3;
+    }
+
+    // Rotation
+    if (!noMotion && globe) {
+      globe.rotation.y += dt * 0.025;
+      if (atmosphere) atmosphere.rotation.y = globe.rotation.y;
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  renderer.setAnimationLoop(animate);
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      renderer.setAnimationLoop(null);
+    } else {
+      renderer.setAnimationLoop(animate);
+      clock.getDelta();
+    }
+  });
+
+  console.log('🌍 Longyan to the World — 3D Earth Viewer ready');
+})();
+</script>
+</body>
+</html>
