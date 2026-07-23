@@ -152,39 +152,40 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    FS[飞书会话]
-    FW[飞书 Webhook]
+    USER[用户 @机器人]
+    ALERT[系统告警]
+    TICK[定时 tick]
 
-    subgraph AP[Agent 平台]
-        GW[消息网关<br/>标准化事件]
-        SM[会话管理<br/>用户身份 + 租户 scope]
+    subgraph AGENT[Agent 平台]
+        GW[消息网关]
+        SM[会话管理]
         RT[意图路由]
-        QC[查询]
-        AN[分析/诊断]
-        CT[控制]
-        MCP[调用 MCP 工具]
-        FMT[格式化回复]
     end
 
-    SA[系统告警] -->|事件| GW
-    TK[定时 tick] -->|触发| GW
+    QUERY[数据查询]
+    ANALYZE[分析/诊断]
+    CONTROL[任务控制]
+    TOOLS[MCP 工具调用]
+    FMT[格式化回复]
+    FS[飞书消息推送]
 
-    FS -->|@机器人| GW
+    USER -->|消息| GW
+    ALERT -->|告警事件| GW
+    TICK -->|巡检触发| GW
+
     GW --> SM --> RT
-    RT --> QC
-    RT --> AN
-    RT --> CT
-    QC --> MCP
-    AN --> MCP
-    CT --> MCP
-    MCP --> FMT
-    FMT -->|飞书消息| FW
 
-    SA -->|事件| GW
-    GW -->|补全上下文| FMT
-    TK -->|巡检触发| AN
-    AN -->|巡检报告| FMT
-    FMT -->|推送卡片| FW
+    RT --> QUERY
+    RT --> ANALYZE
+    RT --> CONTROL
+
+    QUERY --> TOOLS
+    ANALYZE --> TOOLS
+    CONTROL --> TOOLS
+
+    TOOLS --> FMT --> FS
+    TOOLS -->|告警补全上下文| FMT
+    TICK -->|触发巡检分析| ANALYZE
 ```
 
 ### 典型对话流示例
