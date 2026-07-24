@@ -475,9 +475,7 @@ a:hover { text-decoration: underline; }
     flyGroup.add(destDot);
   }
 
-  // ── China border outline ──────────────────────────────
-  // Real China boundary from provincial GeoJSON (Alibaba DataV)
-  var chinaBorder = [
+  // ── OrbitControls ─────────────────────────────────────
     [40.58114, 117.34861],
     [39.77870, 116.94948],
     [39.83433, 117.25191],
@@ -2519,23 +2517,6 @@ a:hover { text-decoration: underline; }
     [15.22897, 109.82952],
     [16.20667, 109.29271],
     [6.53816, 108.21680]
-  ];
-
-  var borderPoints = [];
-  for (var bi = 0; bi < chinaBorder.length; bi++) {
-    borderPoints.push(latLonToVec3(chinaBorder[bi][0], chinaBorder[bi][1], 1.003));
-  }
-  var borderGeo = new THREE.BufferGeometry().setFromPoints(borderPoints);
-  var borderMat = new THREE.LineBasicMaterial({
-    color: 0xd4a854,
-    transparent: true,
-    opacity: 0.25,
-    depthTest: true,
-    depthWrite: false
-  });
-  var borderLine = new THREE.Line(borderGeo, borderMat);
-  flyGroup.add(borderLine);
-
   // ── OrbitControls ─────────────────────────────────────
   var controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
