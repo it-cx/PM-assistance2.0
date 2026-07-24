@@ -1,9 +1,9 @@
 ---
-project: 无人环卫平台
+project: 智慧环卫项目
 created: 2026-07-24
 ---
 
-# STATUS — 无人环卫平台
+# STATUS — 智慧环卫项目
 
 ```yaml
 phase: develop
